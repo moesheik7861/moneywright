@@ -56,6 +56,7 @@ import {
   type RawPdfTransaction,
 } from '../lib/pdf'
 import { parseInvestmentStatement } from './investment-parser'
+import { parseCapitecStatement } from '../lib/capitec-parser'
 
 /**
  * Maximum pages to include before truncating middle pages
@@ -472,6 +473,16 @@ export async function parseStatement(options: {
   const fullText = combineAllPages(pages)
   const llmText = combinePagesForLLM(pages)
 
+  // Deterministic country/bank parsers run before any AI call.
+  // Capitec is the first South African parser and can handle standard text PDFs locally.
+  const localCapitec =
+    countryCode === 'ZA' ? parseCapitecStatement(fullText) : null
+  if (localCapitec) {
+    logger.debug(
+      `[Parser] Local Capitec parser matched: ${localCapitec.transactions.length} transactions, confidence=${localCapitec.confidence}`
+    )
+  }
+
   if (pages.length > MAX_PAGES_BEFORE_TRUNCATION) {
     const omittedPages = pages.length - PAGES_TO_KEEP_EACH_END * 2
     logger.debug(
@@ -483,7 +494,7 @@ export async function parseStatement(options: {
 
   // Step 0: Detect document type (skip if user already specified)
   let documentInfo: DocumentInfo | null = null
-  const effectiveDocumentType = documentType || null
+  const effectiveDocumentType = documentType || (localCapitec ? 'bank_statement' : null)
 
   if (!effectiveDocumentType) {
     // Auto-detect document type
@@ -568,7 +579,10 @@ export async function parseStatement(options: {
   // Step 1: Extract account info and statement summary from FULL PDF
   // We can use documentInfo if available, otherwise extract fresh
   let accountInfo: AccountInfo | null = null
-  if (documentInfo && documentInfo.institution_id && documentInfo.account_number) {
+  if (localCapitec) {
+    accountInfo = localCapitec.accountInfo
+    logger.debug('[Parser] Using local Capitec account extraction; AI account detection skipped')
+  } else if (documentInfo && documentInfo.institution_id && documentInfo.account_number) {
     // Convert documentInfo to AccountInfo format
     accountInfo = {
       account_type: documentInfo.account_type || 'other',
@@ -765,11 +779,11 @@ export async function parseStatement(options: {
       }
     : undefined
 
-  // Step 2: Check for cached parser code
-  let rawTransactions: RawPdfTransaction[] = []
-  let usedCachedCode = false
+  // Step 2: Use a deterministic bank parser when available; otherwise use cached/generated parsers.
+  let rawTransactions: RawPdfTransaction[] = localCapitec?.transactions ?? []
+  let usedCachedCode = !!localCapitec && rawTransactions.length > 0
 
-  const cachedCodes = await getParserCodes(bankKey)
+  const cachedCodes = usedCachedCode ? [] : await getParserCodes(bankKey)
   if (cachedCodes.length > 0) {
     logger.debug(`[Parser] Found ${cachedCodes.length} cached parser versions for ${bankKey}`)
 
