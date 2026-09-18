@@ -80,6 +80,7 @@ export function StatementCard({
 
   const isPending = statement.status === 'pending'
   const isParsing = statement.status === 'parsing'
+  const isPendingAi = statement.status === 'pending_ai'
   const isFailed = statement.status === 'failed'
   const isCompleted = statement.status === 'completed'
 
@@ -96,6 +97,13 @@ export function StatementCard({
         icon: <Loader2 className="h-3 w-3 animate-spin" />,
         label: 'Processing...',
         className: 'text-primary',
+      }
+    }
+    if (isPendingAi) {
+      return {
+        icon: <Clock className="h-3 w-3" />,
+        label: 'Pending AI',
+        className: 'text-warning',
       }
     }
     if (isPending) {
