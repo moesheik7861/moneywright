@@ -16,13 +16,12 @@ import {
   useConstants,
   useDeleteStatement,
   useProfileSelection,
-  retryStatement,
 } from '@/hooks'
 import { StatementCard, FilterBar, UploadForm, type SortOption } from '@/components/statements'
 import { RecategorizeModal } from '@/components/transactions/recategorize-modal'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FileText, Upload as UploadIcon } from 'lucide-react'
-import type { Statement } from '@/lib/api'
+import { retryStatement, type Statement } from '@/lib/api'
 
 // Search params validation
 type StatementsSearchParams = {
