@@ -26,7 +26,7 @@ const CATEGORY_HINTS: Record<CountryCode, string> = {
 - "Interest Received", "Interest Paid", or other explicit interest entries = interest
 - "Transfer", "Round-up Transfer", or "Sweep Transfer" = transfer unless the description explicitly says salary, income, interest, or investment
 - Explicit "Groceries" = groceries
-- Explicit "Fuel" or known fuel stations such as Astron Energies, Engen, Shell, BP, TotalEnergies, Sasol = fuel
+- Explicit "Fuel", "Petrol", "Diesel" or refuelling context = fuel. A fuel-station merchant name alone is not enough.
 - Explicit "Salary" or payroll wording = salary_income
 - Explicit "Other Income" or "Income Received" = other_income
 - PayShap payments from identifiable people are transfers unless the description explicitly says income
@@ -36,7 +36,7 @@ const CATEGORY_HINTS: Record<CountryCode, string> = {
 === COMMON SOUTH AFRICAN MERCHANT CLUES ===
 - Woolworths, Pick n Pay, Checkers, Shoprite, Spar, supermarket/grocery = groceries ONLY when the transaction description explicitly provides grocery/food context; otherwise use other
 - Restaurants, cafes, takeaways, Mr D, Uber Eats, restaurant delivery = food_dining
-- Petrol, diesel, fuel station, Astron Energies, Engen, Shell, BP, TotalEnergies, Sasol = fuel
+- Petrol, diesel, refuelling context = fuel; do not infer fuel from station name alone.
 - Apple.com/bill by itself is software/services or entertainment depending on the underlying purchase; an "Insufficient Funds Fee" attached to Apple.com/bill is bank_charges
 - Bank service charges, SMS charges, monthly account fees = bank_charges
 
