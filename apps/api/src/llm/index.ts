@@ -226,33 +226,40 @@ function parseModelOverride(
  * or just model name which will be inferred
  * Returns both the model and any provider-specific options (e.g., gateway restrictions)
  */
-async function resolveOllamaModel(baseUrl: string): Promise<string> {
+async function getOllamaInstalledModels(baseUrl: string): Promise<string[]> {
   const rootUrl = baseUrl.replace(/\/api\/?$/, '')
-  try {
-    const response = await fetch(`${rootUrl}/api/tags`)
-    if (!response.ok) {
-      throw new Error(`Ollama model list request failed: HTTP ${response.status}`)
-    }
-
-    const data = (await response.json()) as {
-      models?: Array<{ name?: string; model?: string }>
-    }
-    const model = data.models?.find((item) => item.name || item.model)
-    const modelName = model?.name || model?.model
-
-    if (!modelName) {
-      throw new Error(
-        'No Ollama models are installed. Install a local Ollama model, then retry the statement.'
-      )
-    }
-
-    return modelName
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Could not query Ollama for installed models')
+  const response = await fetch(`${rootUrl}/api/tags`)
+  if (!response.ok) {
+    throw new Error(`Ollama model list request failed: HTTP ${response.status}`)
   }
+
+  const data = (await response.json()) as {
+    models?: Array<{ name?: string; model?: string }>
+  }
+
+  return (data.models || [])
+    .map((item) => item.name || item.model || '')
+    .filter(Boolean)
+}
+
+async function resolveOllamaModel(baseUrl: string, requestedModel?: string): Promise<string> {
+  const models = await getOllamaInstalledModels(baseUrl)
+
+  if (models.length === 0) {
+    throw new Error(
+      'No Ollama models are installed. Install a local Ollama model, then retry the statement.'
+    )
+  }
+
+  if (requestedModel) {
+    const requestedBase = requestedModel.replace(/:latest$/, '')
+    const exact = models.find(
+      (name) => name === requestedModel || name.replace(/:latest$/, '') === requestedBase
+    )
+    if (exact) return exact
+  }
+
+  return models[0]!
 }
 
 export async function createLLMClientFromSettings(
@@ -276,6 +283,13 @@ export async function createLLMClientFromSettings(
     const parsed = parseModelOverride(modelOverride, settings)
     provider = parsed.provider
     model = parsed.model
+
+    // A stale Ollama override (for example "ollama:gpt-5-mini") should never
+    // break a configured local setup. Prefer the requested model when installed;
+    // otherwise fall back to the first installed local model.
+    if (provider === 'ollama' && settings.ollamaBaseUrl) {
+      model = await resolveOllamaModel(settings.ollamaBaseUrl, model)
+    }
   }
 
   // Get the appropriate API key for the provider
