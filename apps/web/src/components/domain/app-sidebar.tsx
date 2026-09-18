@@ -52,7 +52,7 @@ const mainNavItems = [
     href: '/',
   },
   {
-    title: 'Ask Penny',
+    title: 'Ask Nexus',
     icon: MessageSquare,
     href: '/chat',
   },
@@ -158,9 +158,9 @@ export function AppSidebar() {
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
-            <img src="/logo.png" alt="Moneywright" className="relative h-8 w-8" />
+            <img src="/logo.png" alt="Nexus Financial Management" className="relative h-8 w-8" />
           </div>
-          <span className="text-lg font-semibold font-display tracking-tight">Moneywright</span>
+          <span className="text-lg font-semibold font-display tracking-tight">Nexus</span>
         </div>
       </SidebarHeader>
 
