@@ -994,6 +994,7 @@ export const TRANSACTION_CATEGORIES = {
     { code: 'tax_sars', label: 'Tax / SARS', color: 'red' },
     { code: 'salary_income', label: 'Salary / Income', color: 'emerald' },
     { code: 'freelance_income', label: 'Freelance / Business Income', color: 'emerald' },
+    { code: 'other_income', label: 'Other Income', color: 'emerald' },
     { code: 'interest', label: 'Interest', color: 'emerald' },
     { code: 'dividend', label: 'Dividend', color: 'emerald' },
     { code: 'investment', label: 'Investment', color: 'amber' },
