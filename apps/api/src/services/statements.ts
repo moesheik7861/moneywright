@@ -478,7 +478,12 @@ async function processStatements(
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       logger.error(`[Statement] Failed to parse ${stmt.statementId}:`, errorMessage)
-      await updateStatementStatus(stmt.statementId, 'failed', errorMessage)
+      if (errorMessage.startsWith('AI_REQUIRED:')) {
+        // Keep the source document and statement available for a later local-AI retry.
+        await updateStatementStatus(stmt.statementId, 'pending_ai', errorMessage.replace(/^AI_REQUIRED:\s*/, ''))
+      } else {
+        await updateStatementStatus(stmt.statementId, 'failed', errorMessage)
+      }
 
       // Clean up partial transactions
       await db
