@@ -1,5 +1,9 @@
 import { eq, and, desc, inArray } from 'drizzle-orm'
 import { db, tables, dbType } from '../db'
+import { readFile, readdir } from 'fs/promises'
+import { join } from 'path'
+import { extractPdfText, extractCsvText, extractXlsxText } from '../lib/file-parser'
+import { getDocumentRootPath } from '../lib/document-storage'
 import type { Statement } from '../db'
 import { logger } from '../lib/logger'
 import type { CountryCode, FileType } from '../lib/constants'
@@ -570,6 +574,7 @@ export async function recoverPendingStatements(): Promise<void> {
         status: tables.statements.status,
         documentType: tables.statements.documentType,
         fileType: tables.statements.fileType,
+        documentPath: tables.statements.documentPath,
         rawText: tables.statements.rawText,
       })
       .from(tables.statements)
@@ -578,20 +583,78 @@ export async function recoverPendingStatements(): Promise<void> {
     let recoveredCount = 0
 
     for (const statement of pending) {
-      const rawText = statement.rawText?.trim() || ''
+      let rawText = statement.rawText?.trim() || ''
+      let documentPath = statement.documentPath || null
+
+      // Older uploads wrote the source file before the DB path was persisted.
+      // Reconstruct the path from our storage convention when possible.
+      if (!documentPath) {
+        try {
+          const directory = join(getDocumentRootPath(), statement.userId)
+          const files = await readdir(directory)
+          const match = files.find((name) => name.startsWith(`${statement.id}-`))
+          if (match) documentPath = join(directory, match)
+        } catch {
+          // No durable directory available; leave the document for AI/OCR.
+        }
+      }
+
+      // Re-open the retained source and perform deterministic text extraction
+      // when rawText is missing. This repairs older uploads that failed before
+      // their extracted text was persisted.
+      if (!rawText && documentPath) {
+        try {
+          const buffer = await readFile(documentPath)
+          let pages: string[] = []
+
+          if (statement.fileType === 'pdf') {
+            pages = await extractPdfText(buffer)
+          } else if (statement.fileType === 'csv') {
+            pages = [await extractCsvText(buffer)]
+          } else if (statement.fileType === 'xlsx') {
+            pages = await extractXlsxText(buffer)
+          }
+
+          rawText = pages.join('\n\n').trim()
+
+          if (rawText) {
+            const now = dbType === 'postgres' ? new Date() : new Date().toISOString()
+            await db
+              .update(tables.statements)
+              .set({
+                documentPath,
+                rawText,
+                extractionProvider: 'local-text',
+                extractionAttempts: 1,
+                updatedAt: now as Date,
+              })
+              .where(eq(tables.statements.id, statement.id))
+
+            logger.debug(
+              `[Statement] Re-extracted retained document ${statement.id}: ${rawText.length} chars`
+            )
+          }
+        } catch (error) {
+          logger.warn(
+            `[Statement] Could not re-extract retained document ${statement.id}: ${error instanceof Error ? error.message : String(error)}`
+          )
+        }
+      }
+
       logger.debug(
-        `[Statement] Recovery candidate ${statement.id}: status=${statement.status}, rawText=${rawText.length} chars`
+        `[Statement] Recovery candidate ${statement.id}: status=${statement.status}, rawText=${rawText.length} chars, source=${documentPath ? 'stored-file' : 'none'}`
       )
 
       if (!rawText) {
         await updateStatementStatus(
           statement.id,
           'pending_ai',
-          'Document retained. OCR/AI extraction is required.'
+          documentPath
+            ? 'Document retained, but text extraction returned no readable text. OCR/vision is required.'
+            : 'Document retained, but its source file could not be located. OCR/AI extraction is required.'
         )
         continue
       }
-
       const [user] = await db
         .select({ country: tables.users.country })
         .from(tables.users)
