@@ -82,6 +82,8 @@ export interface StatementInput {
   password?: string
   /** Whether to save the password to the account */
   savePassword?: boolean
+  /** During recovery, try deterministic parsers but never invoke an AI provider automatically. */
+  localOnly?: boolean
 }
 
 function toStatementResponse(statement: Statement): StatementResponse {
@@ -454,6 +456,7 @@ async function processStatements(
         documentType: stmt.documentType,
         sourceType: stmt.sourceType,
         parsingModel: stmt.parsingModel,
+        localOnly: stmt.localOnly,
       })
 
       // Get the account ID for this statement
@@ -572,13 +575,15 @@ export async function recoverPendingStatements(): Promise<void> {
       .from(tables.statements)
       .where(inArray(tables.statements.status, ['pending', 'parsing', 'pending_ai']))
 
+    let recoveredCount = 0
+
     for (const statement of pending) {
-      const rawTextLength = statement.rawText?.length || 0
+      const rawText = statement.rawText?.trim() || ''
       logger.debug(
-        `[Statement] Recovery candidate ${statement.id}: status=${statement.status}, rawText=${rawTextLength} chars`
+        `[Statement] Recovery candidate ${statement.id}: status=${statement.status}, rawText=${rawText.length} chars`
       )
 
-      if (!statement.rawText?.trim()) {
+      if (!rawText) {
         await updateStatementStatus(
           statement.id,
           'pending_ai',
@@ -593,30 +598,16 @@ export async function recoverPendingStatements(): Promise<void> {
         .where(eq(tables.users.id, statement.userId))
         .limit(1)
 
-      // A pending-AI document can be retried automatically when we now have
-      // a deterministic parser for its stored text. Unknown formats remain
-      // pending AI so we never burn through AI retries on every API restart.
-      const compactDocumentText = (statement.rawText || '')
-        .replace(/[^a-z]/gi, '')
-        .toLowerCase()
-      const canRetryLocally =
+      const compactDocumentText = rawText.replace(/[^a-z]/gi, '').toLowerCase()
+      const looksLikeCapitec =
         compactDocumentText.includes('capitec') && compactDocumentText.includes('bank')
 
-      logger.debug(
-        `[Statement] Recovery parser check ${statement.id}: localCapitec=${canRetryLocally}`
-      )
+      // Pending-AI jobs are retried locally first. They must not call an AI
+      // provider just because the API restarted; AI can be retried explicitly
+      // later from the UI once configured.
+      const localOnly = statement.status === 'pending_ai'
+      const effectiveCountry = looksLikeCapitec ? 'ZA' : user?.country
 
-      if (statement.status === 'pending_ai' && !canRetryLocally) {
-        logger.debug(
-          `[Statement] Skipping AI-pending statement ${statement.id}: no deterministic local parser`
-        )
-        continue
-      }
-
-      // Capitec documents are unambiguously ZAR/South African for the
-      // deterministic local parser, so they can recover even if the user
-      // country was not persisted correctly during an earlier onboarding run.
-      const effectiveCountry = canRetryLocally ? 'ZA' : user?.country || null
       if (!effectiveCountry) {
         logger.warn(
           `[Statement] Cannot recover ${statement.id}: user country is not set`
@@ -629,20 +620,23 @@ export async function recoverPendingStatements(): Promise<void> {
           statementId: statement.id,
           profileId: statement.profileId,
           userId: statement.userId,
-          pages: [statement.rawText],
+          pages: [rawText],
           fileType: statement.fileType as FileType,
           documentType: statement.documentType as 'bank_statement' | 'investment_statement',
+          localOnly,
         }],
         countryCode: effectiveCountry as CountryCode,
       })
+
+      recoveredCount += 1
       logger.debug(
-        `[Statement] Re-queued statement ${statement.id} after restart (localParser=${canRetryLocally})`
+        `[Statement] Re-queued statement ${statement.id}: localOnly=${localOnly}, capitecHint=${looksLikeCapitec}`
       )
     }
 
     if (pending.length > 0) {
       logger.debug(
-        `[Statement] Recovered ${pending.length} pending statement job(s) (including locally retryable AI-pending documents)`
+        `[Statement] Recovery complete: ${recoveredCount}/${pending.length} statement job(s) re-queued`
       )
     }
   } catch (error) {
