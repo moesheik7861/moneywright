@@ -19,6 +19,34 @@ import type { CategorizedTransaction, TransactionForCategorization } from './typ
  * Includes common merchants, services, and patterns for each country
  */
 const CATEGORY_HINTS: Record<CountryCode, string> = {
+  ZA: `CATEGORY DETECTION (SOUTH AFRICA):
+
+=== HIGH-CONFIDENCE BANK DESCRIPTION RULES ===
+- Descriptions containing "Fees", "Fee", "SMS Notification Fee", "Account Admin Fee", or "Insufficient Funds Fee" = bank_charges
+- "Interest Received", "Interest Paid", or other explicit interest entries = interest
+- "Transfer", "Round-up Transfer", or "Sweep Transfer" = transfer unless the description explicitly says salary, income, interest, or investment
+- Explicit "Groceries" = groceries
+- Explicit "Fuel" or known fuel stations such as Astron Energies, Engen, Shell, BP, TotalEnergies, Sasol = fuel
+- Explicit "Salary" or payroll wording = salary_income
+- Explicit "Other Income" or "Income Received" = other_income
+- PayShap payments from identifiable people are transfers unless the description explicitly says income
+- Do NOT classify a merchant like Woolworths, Pick n Pay, Checkers, or Shoprite as groceries solely from the merchant name when no purchase detail/category is present. These merchants can sell multiple product types.
+- When evidence is ambiguous, use other with lower confidence instead of guessing.
+
+=== COMMON SOUTH AFRICAN MERCHANT CLUES ===
+- Woolworths, Pick n Pay, Checkers, Shoprite, Spar, supermarket/grocery = groceries ONLY when the transaction description explicitly provides grocery/food context; otherwise use other
+- Restaurants, cafes, takeaways, Mr D, Uber Eats, restaurant delivery = food_dining
+- Petrol, diesel, fuel station, Astron Energies, Engen, Shell, BP, TotalEnergies, Sasol = fuel
+- Apple.com/bill by itself is software/services or entertainment depending on the underlying purchase; an "Insufficient Funds Fee" attached to Apple.com/bill is bank_charges
+- Bank service charges, SMS charges, monthly account fees = bank_charges
+
+=== INCOME & TRANSFERS ===
+- "Other Income" = other_income
+- "Salary" / payroll = salary_income
+- Interest = interest
+- Internal/own-account transfers, round-ups, sweeps = transfer
+`,
+
   IN: `CATEGORY DETECTION (India):
 
 === SALARY DETECTION - BE VERY CAREFUL ===
@@ -487,6 +515,114 @@ async function fetchUncategorizedTransactions(
 }
 
 /**
+ * Apply high-confidence deterministic categories before invoking the LLM.
+ *
+ * This is deliberately conservative: a merchant name alone is not enough when
+ * the merchant sells multiple product types (e.g. Woolworths in South Africa).
+ */
+function getDeterministicCategory(
+  txn: TransactionForCategorization,
+  countryCode: CountryCode
+): CategorizedTransaction | null {
+  const description = (txn.description || '').trim()
+  const text = description.toLowerCase()
+
+  if (!description) return null
+
+  // Bank fees / charges are explicit and should not become "other".
+  if (
+    /insufficient\s*funds\s*fee|notification\s*fee|account\s*admin\s*fee|\bfees?\b/.test(text)
+  ) {
+    return {
+      id: txn.id,
+      category: 'bank_charges',
+      confidence: 0.99,
+      summary: description,
+      isSubscription: false,
+    }
+  }
+
+  // Transfers take priority over generic "interest" because sweep/round-up
+  // transfers are movements of money rather than interest income.
+  if (/\btransfer\b|round[- ]?up|sweep/.test(text)) {
+    if (!/interest\s+(received|earned|paid)|\binterest\b.*\b(income|received|earned)\b/.test(text)) {
+      return {
+        id: txn.id,
+        category: 'transfer',
+        confidence: 0.98,
+        summary: description,
+        isSubscription: false,
+      }
+    }
+  }
+
+  if (/\binterest\b/.test(text)) {
+    return {
+      id: txn.id,
+      category: 'interest',
+      confidence: 0.99,
+      summary: description,
+      isSubscription: false,
+    }
+  }
+
+  if (/\bother\s+income\b|\bincome\s+received\b/.test(text)) {
+    return {
+      id: txn.id,
+      category: countryCode === 'ZA' ? 'other_income' : 'other',
+      confidence: 0.99,
+      summary: description,
+      isSubscription: false,
+    }
+  }
+
+  if (/\b(?:salary|payroll|wages)\b/.test(text)) {
+    return {
+      id: txn.id,
+      category: countryCode === 'ZA' ? 'salary_income' : 'other',
+      confidence: 0.99,
+      summary: description,
+      isSubscription: false,
+    }
+  }
+
+  // Trust explicit transaction descriptors from the bank/parser.
+  if (/\bgroceries\b|\bgrocery\b/.test(text)) {
+    return {
+      id: txn.id,
+      category: 'groceries',
+      confidence: 0.98,
+      summary: description,
+      isSubscription: false,
+    }
+  }
+
+  if (/\bfuel\b|\bpetrol\b|\bdiesel\b|astron\s+energies|eng(en)?|shell|bp|totalenergies|sasol/.test(text)) {
+    return {
+      id: txn.id,
+      category: countryCode === 'US' ? 'gas' : 'fuel',
+      confidence: 0.97,
+      summary: description,
+      isSubscription: false,
+    }
+  }
+
+  // Known explicit food/dining wording is safe. Do not infer groceries from
+  // a supermarket merchant name alone.
+  if (/\b(?:restaurant|cafe|coffee|takeaway|take[- ]?out|mr\s*d|uber\s*eats)\b/.test(text)) {
+    return {
+      id: txn.id,
+      category: 'food_dining',
+      confidence: 0.95,
+      summary: description,
+      isSubscription: false,
+    }
+  }
+
+  return null
+}
+
+/**
  * Categorize transactions by their IDs
  * Fetches transactions from DB, sends to LLM, returns categorizations
  */
@@ -876,6 +1012,36 @@ export async function categorizeTransactionsStreaming(
 
   // Initial pass - fetch uncategorized transactions
   let uncategorized = await fetchUncategorizedTransactions(transactionIds)
+
+  // Resolve explicit bank-description categories locally first. This keeps
+  // routine transactions off the LLM and avoids guessing on ambiguous merchants.
+  if (uncategorized.length > 0) {
+    const categories = getCategoriesForCountry(countryCode)
+    const validCategories = new Set(categories.map((c) => c.code))
+    const remaining: TransactionForCategorization[] = []
+    let deterministicCount = 0
+
+    for (const txn of uncategorized) {
+      const deterministic = getDeterministicCategory(txn, countryCode)
+      if (deterministic && validCategories.has(deterministic.category)) {
+        const updated = await updateTransactionCategory(deterministic)
+        if (updated) {
+          deterministicCount += 1
+          continue
+        }
+      }
+      remaining.push(txn)
+    }
+
+    if (deterministicCount > 0) {
+      totalCategorized += deterministicCount
+      logger.debug(
+        `[Categorize] Deterministic pass categorized ${deterministicCount} transaction(s) before AI`
+      )
+    }
+
+    uncategorized = remaining
+  }
 
   if (uncategorized.length === 0) {
     logger.debug(`[Categorize] All transactions already categorized`)
