@@ -55,7 +55,29 @@ export interface CapitecLocalParseResult {
 }
 
 export function looksLikeCapitecStatement(text: string): boolean {
-  return /capitec(?:\s+bank)?(?:\s+limited)?/i.test(text)
+  // PDF text extraction can insert line breaks/spaces between bank-name words.
+  return /c\s*a\s*p\s*i\s*t\s*e\s*c/i.test(text)
+}
+
+function extractAccountNumber(text: string): string | null {
+  const normalized = text.replace(/\u00a0/g, ' ').replace(/\r/g, '').replace(/\f/g, '\n')
+  const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean)
+
+  // Preferred: "Account" or "Account Number" label followed by the value
+  // on the same line or within the next few extracted lines.
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^Account(?:\s+Number)?$/i.test(lines[i]!)) continue
+    for (let j = i; j <= Math.min(i + 3, lines.length - 1); j++) {
+      const match = lines[j]!.match(/\b(\d{6,20})\b/)
+      if (match) return match[1]!
+    }
+  }
+
+  // Fallback for "Account 1234567890" or "Account Number: 1234567890"
+  const direct = normalized.match(
+    /\bAccount(?:\s+Number)?\b\s*:?\s*(\d{6,20})\b/i
+  )
+  return direct?.[1] || null
 }
 
 export function parseCapitecStatement(text: string): CapitecLocalParseResult | null {
@@ -63,14 +85,7 @@ export function parseCapitecStatement(text: string): CapitecLocalParseResult | n
 
   const normalized = text.replace(/\u00a0/g, ' ').replace(/\r/g, '').replace(/\f/g, '\n')
 
-  const accountNumber =
-    extractTextValue(normalized, [
-      /\bAccount(?:\s+Number)?\s*:\s*([0-9][0-9\s-]{5,25})/i,
-      /\bAccount(?:\s+Number)?\s+([0-9][0-9\s-]{5,25})/i,
-      /\bAccount(?:\s+Number)?\s*[:\s]*\n\s*([0-9][0-9\s-]{5,25})/i,
-    ])
-      ?.replace(/[^0-9]/g, '')
-      .slice(0, 20) || null
+  const accountNumber = extractAccountNumber(normalized)
 
   const fromDate =
     extractTextValue(normalized, [
@@ -86,17 +101,17 @@ export function parseCapitecStatement(text: string): CapitecLocalParseResult | n
     ]) ||
     firstMatch(normalized, /\bTo\s+Date\s*[:]?\s*(?:\n\s*)?(\d{2}\/\d{2}\/\d{4})/i)
   const opening = firstMatch(
-    text,
+    normalized,
     /\bOpening\s+Balance\s*:\s*(R?\s?[\d\s,]+\.\d{2})/i
   )
   const closing = firstMatch(
-    text,
+    normalized,
     /\bClosing\s+Balance\s*:\s*(R?\s?[\d\s,]+\.\d{2})/i
   )
 
   if (!accountNumber) return null
 
-  const accountType = /Savings\s+Account\s+Statement/i.test(text)
+  const accountType = /Savings\s+Account\s+Statement/i.test(normalized)
     ? 'savings_account'
     : 'current_account'
 
@@ -123,7 +138,7 @@ export function parseCapitecStatement(text: string): CapitecLocalParseResult | n
   }
 
   const transactions: RawPdfTransaction[] = []
-  const historyIndex = text.search(/\bTransaction\s+History\b/i)
+  const historyIndex = normalized.search(/\bTransaction\s+History\b/i)
 
   if (historyIndex >= 0) {
     const afterHistory = text.slice(historyIndex)
