@@ -272,7 +272,7 @@ export function AccountForm({
             <Label htmlFor="productName">Product Name</Label>
             <Input
               id="productName"
-              placeholder="e.g., Regalia, Platinum Travel, Savings Max"
+              placeholder="e.g., Capitec savings, FNB Aspire, EasyEquities"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
             />
