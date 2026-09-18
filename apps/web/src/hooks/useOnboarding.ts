@@ -48,6 +48,7 @@ export const RELATIONSHIP_OPTIONS = [
 // Country flag emoji mapping
 const COUNTRY_FLAGS: Record<string, string> = {
   IN: '🇮🇳',
+  ZA: '🇿🇦',
   US: '🇺🇸',
   EU: '🇪🇺',
   GB: '🇬🇧',
@@ -67,7 +68,7 @@ export function getCountryFlag(countryCode: string): string {
 export function useCountrySelection(redirectTo?: string) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [selectedCountry, setSelectedCountry] = useState<string | null>('IN') // Pre-select India
+  const [selectedCountry, setSelectedCountry] = useState<string | null>('ZA') // Pre-select South Africa
   const [error, setError] = useState<string | null>(null)
 
   const {
