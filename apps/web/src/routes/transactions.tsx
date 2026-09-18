@@ -48,7 +48,7 @@ function TransactionsPage() {
     handleProfileChange,
     handleFamilyViewChange,
   } = useProfileSelection()
-  const countryCode = user?.country?.toLowerCase() || 'in'
+  const countryCode = user?.country?.toLowerCase() || 'za'
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
 
   // Filter state
@@ -95,15 +95,15 @@ function TransactionsPage() {
     creditCount: 0,
     debitCount: 0,
     netAmount: 0,
-    currency: 'INR',
+    currency: 'ZAR',
     categoryBreakdown: [],
   }
 
-  const currency = stats?.currency || 'INR'
+  const currency = stats?.currency || 'ZAR'
 
   // Format amount with proper currency
   const formatAmount = (amount: number, curr: string) => {
-    const locale = curr === 'INR' ? 'en-IN' : 'en-US'
+    const locale = curr === 'ZAR' ? 'en-ZA' : curr === 'INR' ? 'en-IN' : 'en-US'
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: curr,
