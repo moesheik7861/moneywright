@@ -82,9 +82,9 @@ export function BankAccountCard({
     : null
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
-      currency: account.currency || 'INR',
+      currency: account.currency || 'ZAR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
