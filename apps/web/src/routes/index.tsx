@@ -386,7 +386,7 @@ function DashboardPage() {
               ? summary.transactions.totalExpenses
               : threeMonthAvgExpenses?.average
           }
-          currency={summary?.transactions.currency || trendsData?.currency}
+          currency={summary?.transactions.currency || trendsData?.currency || 'ZAR'}
           subtitle={
             summary?.transactions.totalExpenses && summary.transactions.totalExpenses > 0
               ? summary.transactions.expenseCount
@@ -472,10 +472,10 @@ function DashboardPage() {
         <SubscriptionsCard
           subscriptions={subscriptionsData?.subscriptions || []}
           totalMonthly={subscriptionsData?.totalMonthly || 0}
-          currency={subscriptionsData?.currency || 'INR'}
+          currency={subscriptionsData?.currency || 'ZAR'}
           getCategoryLabel={getCategoryLabel}
           isLoading={subscriptionsLoading}
-          countryCode={user?.country?.toLowerCase() || 'in'}
+          countryCode={user?.country?.toLowerCase() || 'za'}
         />
       </div>
 
