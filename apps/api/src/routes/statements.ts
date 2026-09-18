@@ -5,6 +5,7 @@ import {
   getStatementById,
   getStatementStatus,
   createStatement,
+  updateStatementStatus,
   deleteStatement,
   queueStatements,
   type StatementInput,
@@ -17,8 +18,19 @@ import type { FileType } from '../lib/constants'
 import { decryptOptional } from '../lib/encryption'
 import { SUPPORTED_FILE_TYPES, type CountryCode } from '../lib/constants'
 import { logger } from '../lib/logger'
+import { eq } from 'drizzle-orm'
+import { db, tables, dbType } from '../db'
+import { storeOriginalDocument } from '../lib/document-storage'
 
 const statementRoutes = new Hono<{ Variables: AuthVariables }>()
+
+async function setStatementDocumentPath(statementId: string, documentPath: string): Promise<void> {
+  const now = dbType === 'postgres' ? new Date() : new Date().toISOString()
+  await db
+    .update(tables.statements)
+    .set({ documentPath, updatedAt: now as Date })
+    .where(eq(tables.statements.id, statementId))
+}
 
 statementRoutes.use('*', auth())
 
@@ -138,6 +150,21 @@ statementRoutes.post('/upload', async (c) => {
       const arrayBuffer = await file.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
 
+      // Create the durable statement record BEFORE extraction.
+      // The original document must survive parser/AI failures.
+      const statement = await createStatement({
+        accountId: accountId || null,
+        profileId,
+        userId,
+        originalFilename: file.name,
+        fileType,
+        fileSizeBytes: buffer.length,
+        documentType: documentType || undefined,
+      })
+
+      const documentPath = await storeOriginalDocument(userId, statement.id, file.name, buffer)
+      await setStatementDocumentPath(statement.id, documentPath)
+
       // Extract text
       let pages: string[] = []
       let usedPassword: string | null = null
@@ -226,20 +253,15 @@ statementRoutes.post('/upload', async (c) => {
       }
 
       if (pages.length === 0 || pages.every((p) => p.trim() === '')) {
-        errors.push({ filename: file.name, error: 'Could not extract text from file' })
+        await updateStatementStatus(
+          statement.id,
+          'pending_ai',
+          'No readable text was extracted. Original document retained for OCR/AI extraction.'
+        )
+        errors.push({ filename: file.name, error: 'Document stored for OCR/AI extraction' })
+        statementIds.push(statement.id)
         continue
       }
-
-      // Create statement record
-      const statement = await createStatement({
-        accountId: accountId || null,
-        profileId,
-        userId,
-        originalFilename: file.name,
-        fileType,
-        fileSizeBytes: buffer.length,
-        documentType: documentType || undefined,
-      })
 
       statements.push({
         statementId: statement.id,
