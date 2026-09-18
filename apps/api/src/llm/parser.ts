@@ -910,7 +910,7 @@ export async function parseStatement(options: {
 
   // Get user's currency
   const [user] = await db.select().from(tables.users).where(eq(tables.users.id, userId)).limit(1)
-  const currency = user?.country === 'IN' ? 'INR' : 'USD'
+  const currency = user?.country === 'ZA' ? 'ZAR' : user?.country === 'IN' ? 'INR' : 'USD'
 
   // Step 5: Insert transactions (category will be null initially, updated by streaming categorization)
   logger.debug(`[Parser] Inserting transactions...`)
