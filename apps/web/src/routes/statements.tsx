@@ -86,7 +86,7 @@ function StatementsPage() {
     refetchInterval: (query) => {
       // Poll for updates when any statement is pending or parsing
       const data = (query as { state: { data?: { status: string }[] } }).state.data
-      if (data?.some((s) => s.status === 'pending' || s.status === 'parsing')) {
+      if (data?.some((s) => s.status === 'pending' || s.status === 'parsing' || s.status === 'pending_ai')) {
         return 3000
       }
       return false
