@@ -32,7 +32,7 @@ constantsRoutes.get('/', async (c) => {
     return c.json({ error: 'not_found', message: 'User not found' }, 404)
   }
 
-  const countryCode = (user.country || 'US') as CountryCode
+  const countryCode = (user.country || 'ZA') as CountryCode
 
   return c.json({
     countryCode,
@@ -59,7 +59,7 @@ constantsRoutes.get('/institutions', async (c) => {
     return c.json({ error: 'not_found', message: 'User not found' }, 404)
   }
 
-  const countryCode = (user.country || 'US') as CountryCode
+  const countryCode = (user.country || 'ZA') as CountryCode
   const institutions = getInstitutionsForCountry(countryCode)
 
   return c.json({ institutions, countryCode })
@@ -77,7 +77,7 @@ constantsRoutes.get('/investment-sources', async (c) => {
     return c.json({ error: 'not_found', message: 'User not found' }, 404)
   }
 
-  const countryCode = (user.country || 'US') as CountryCode
+  const countryCode = (user.country || 'ZA') as CountryCode
   const sourceTypes = getInvestmentSourceTypesForCountry(countryCode)
 
   return c.json({ sourceTypes, countryCode })
