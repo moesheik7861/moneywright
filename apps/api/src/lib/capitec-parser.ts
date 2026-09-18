@@ -55,29 +55,47 @@ export interface CapitecLocalParseResult {
 }
 
 export function looksLikeCapitecStatement(text: string): boolean {
-  // PDF text extraction can insert line breaks/spaces between bank-name words.
-  return /c\s*a\s*p\s*i\s*t\s*e\s*c/i.test(text)
+  // PDF extraction can place arbitrary spaces, newlines, or punctuation between
+  // characters. Compact alphabetic text makes the bank-name test resilient.
+  const compact = text.replace(/[^a-z]/gi, '').toLowerCase()
+  return compact.includes('capitec') && compact.includes('bank')
+}
+
+function normalizeAccountCandidate(value: string): string | null {
+  const digits = value.replace(/[^0-9]/g, '')
+  return digits.length >= 6 && digits.length <= 20 ? digits : null
 }
 
 function extractAccountNumber(text: string): string | null {
   const normalized = text.replace(/\u00a0/g, ' ').replace(/\r/g, '').replace(/\f/g, '\n')
   const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean)
 
-  // Preferred: "Account" or "Account Number" label followed by the value
-  // on the same line or within the next few extracted lines.
+  // Preferred: account label followed by the number on the same line or one
+  // of the next few lines. Allow spaces/hyphens inside the number because some
+  // PDF extractors split long digit runs.
   for (let i = 0; i < lines.length; i++) {
-    if (!/^Account(?:\s+Number)?$/i.test(lines[i]!)) continue
-    for (let j = i; j <= Math.min(i + 3, lines.length - 1); j++) {
-      const match = lines[j]!.match(/\b(\d{6,20})\b/)
-      if (match) return match[1]!
+    if (!/\bAccount(?:\s+Number)?\b/i.test(lines[i]!)) continue
+
+    const nearby = lines.slice(i, Math.min(i + 5, lines.length)).join(' ')
+    const candidates = nearby.match(/[0-9][0-9\s-]{5,25}/g) || []
+    for (const candidate of candidates) {
+      const normalizedCandidate = normalizeAccountCandidate(candidate)
+      if (normalizedCandidate) return normalizedCandidate
     }
   }
 
-  // Fallback for "Account 1234567890" or "Account Number: 1234567890"
-  const direct = normalized.match(
-    /\bAccount(?:\s+Number)?\b\s*:?\s*(\d{6,20})\b/i
-  )
-  return direct?.[1] || null
+  // Fallback for "Account 1234567890" / "Account Number: 1234567890"
+  // and line-wrapped variants.
+  const directCandidates =
+    normalized.match(/\bAccount(?:\s+Number)?\b\s*:?\s*([0-9][0-9\s-]{5,25})/i)
+  const direct = directCandidates?.[1] ? normalizeAccountCandidate(directCandidates[1]) : null
+  if (direct) return direct
+
+  // Last deterministic fallback: locate the first plausible 6-20 digit value
+  // immediately after the word "Account", ignoring PDF whitespace/punctuation.
+  const compact = normalized.replace(/[^A-Za-z0-9]/g, ' ')
+  const compactMatch = compact.match(/\bAccount\s+(?:Number\s+)?(\d(?:[\d ]{5,25}))\b/i)
+  return compactMatch?.[1] ? normalizeAccountCandidate(compactMatch[1]) : null
 }
 
 export function parseCapitecStatement(text: string): CapitecLocalParseResult | null {
@@ -109,7 +127,13 @@ export function parseCapitecStatement(text: string): CapitecLocalParseResult | n
     /\bClosing\s+Balance\s*:\s*(R?\s?[\d\s,]+\.\d{2})/i
   )
 
-  if (!accountNumber) return null
+  if (!accountNumber) {
+    const accountIndex = normalized.search(/\bAccount(?:\s+Number)?\b/i)
+    console.warn(
+      `[Capitec] Bank detected but account number not extracted; account label index=${accountIndex}`
+    )
+    return null
+  }
 
   const accountType = /Savings\s+Account\s+Statement/i.test(normalized)
     ? 'savings_account'
