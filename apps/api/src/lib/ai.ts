@@ -306,7 +306,7 @@ export function getDefaultParsingModelId(provider: LLMProvider): string {
  */
 export function getDefaultCategorizationModelId(provider: LLMProvider): string {
   const recommended = getRecommendedCategorizationModel(provider)
-  return recommended?.id ?? 'gpt-5-mini'
+  return recommended?.id ?? (provider === 'ollama' ? '' : 'gpt-5-mini')
 }
 
 /**
