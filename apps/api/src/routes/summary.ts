@@ -239,6 +239,7 @@ summaryRoutes.get('/fx-rates', async (c) => {
         rates: {
           // Return commonly used currencies
           INR: rates.rates['inr'],
+          ZAR: rates.rates['zar'],
           USD: rates.rates['usd'] ?? 1,
           EUR: rates.rates['eur'],
           GBP: rates.rates['gbp'],
