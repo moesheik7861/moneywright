@@ -108,7 +108,7 @@ function LoginPage() {
     <AuthLayout
       title="Take control of"
       subtitle="your finances"
-      description="Moneywright helps you understand your spending, grow your savings, and make smarter financial decisions."
+      description="Nexus Financial Management helps you understand your spending, grow your savings, and make smarter financial decisions."
     >
       <motion.div
         initial={{ opacity: 0, x: 20 }}
