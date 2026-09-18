@@ -328,6 +328,10 @@ statementRoutes.post('/upload', async (c) => {
         continue
       }
 
+      // Persist extracted text as a second recovery layer so a later local-AI
+      // retry can run without re-uploading the document.
+      await setStatementDocumentPath(statement.id, documentPath, pages.join('\n\n'))
+
       statements.push({
         statementId: statement.id,
         profileId,
