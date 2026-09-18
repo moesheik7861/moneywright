@@ -182,6 +182,29 @@ Apply this context when categorizing - e.g., if profile mentions "freelancer", i
  * Country-specific summary examples for the LLM
  */
 const SUMMARY_EXAMPLES: Record<CountryCode, string> = {
+  ZA: `SUMMARY FORMAT (SOUTH AFRICA):
+
+Use a concise, useful description based on the transaction evidence. Do not invent product details that are not present.
+
+GOOD EXAMPLES:
+- "Woolworths grocery purchase" only when the transaction/receipt explicitly indicates groceries
+- "Woolworths purchase" when the merchant is known but the purchase type is unclear
+- "Astron fuel purchase"
+- "Apple insufficient funds fee"
+- "Capitec monthly account fee"
+- "Capitec SMS notification fee"
+- "Interest received"
+- "Round-up transfer"
+- "Live Better sweep transfer"
+- "PayShap other income"
+
+RULES:
+1. Preserve the actual merchant or bank description where useful.
+2. Do not turn a multi-category merchant such as Woolworths into groceries unless the description or receipt supports it.
+3. For fees, identify the fee type when the statement provides it.
+4. For transfers and income, describe the transaction type clearly.
+`,
+
   IN: `SUMMARY FORMAT - CRITICAL: Follow this exact format for merchant/stats identification:
 
 FORMAT: "MerchantName brief description" (MerchantName = ONE WORD, no spaces)
@@ -597,7 +620,7 @@ function getDeterministicCategory(
     }
   }
 
-  if (/\bfuel\b|\bpetrol\b|\bdiesel\b|astron\s+energies|eng(en)?|shell|bp|totalenergies|sasol/.test(text)) {
+  if (/\bfuel\b|\bpetrol\b|\bdiesel\b|astron\s+energies|\beng(?:en)?\b|\bshell\b|\bbp\b|\btotalenergies\b|\bsasol\b/.test(text)) {
     return {
       id: txn.id,
       category: countryCode === 'US' ? 'gas' : 'fuel',
