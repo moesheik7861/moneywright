@@ -28,8 +28,8 @@ interface HoldingsTableProps {
   holdingTypes: InvestmentHoldingType[]
   formatCurrency: (amount: number | null | undefined, currency: string) => string
   formatPercentage: (value: number | null | undefined) => string
-  showInINR: boolean
-  convertToINR: (amount: number, currency: string) => number
+  showInZAR: boolean
+  convertToZAR: (amount: number, currency: string) => number
   onEditHolding: (holding: InvestmentHolding) => void
   onDeleteHolding: (holdingId: string) => void
   /** Profiles list for showing profile badge in family view */
@@ -44,8 +44,8 @@ export function HoldingsTable({
   holdingTypes,
   formatCurrency,
   formatPercentage,
-  showInINR,
-  convertToINR,
+  showInZAR,
+  convertToZAR,
   onEditHolding,
   onDeleteHolding,
   profiles,
@@ -87,13 +87,13 @@ export function HoldingsTable({
       {/* Table Body */}
       <div className="divide-y divide-border-subtle">
         {holdings.map((holding) => {
-          const displayCurrency = showInINR ? 'INR' : holding.currency
-          const currentValue = showInINR
-            ? convertToINR(holding.currentValue, holding.currency)
+          const displayCurrency = showInZAR ? 'ZAR' : holding.currency
+          const currentValue = showInZAR
+            ? convertToZAR(holding.currentValue, holding.currency)
             : holding.currentValue
           const investedValue =
-            holding.investedValue !== null && showInINR
-              ? convertToINR(holding.investedValue, holding.currency)
+            holding.investedValue !== null && showInZAR
+              ? convertToZAR(holding.investedValue, holding.currency)
               : holding.investedValue
 
           const hasValidInvested = investedValue !== null && investedValue > 0
@@ -115,7 +115,7 @@ export function HoldingsTable({
                       {holding.symbol}
                     </Badge>
                   )}
-                  {showInINR && holding.currency !== 'INR' && (
+                  {showInZAR && holding.currency !== 'ZAR' && (
                     <Badge variant="outline" className="shrink-0 text-[10px]">
                       {holding.currency}
                     </Badge>
