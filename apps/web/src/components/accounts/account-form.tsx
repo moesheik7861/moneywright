@@ -59,7 +59,7 @@ export function AccountForm({
   const [accountName, setAccountName] = useState(account?.accountName || '')
   const [productName, setProductName] = useState(account?.productName || '')
   const [accountNumber, setAccountNumber] = useState('')
-  const [currency, setCurrency] = useState(account?.currency || 'INR')
+  const [currency, setCurrency] = useState(account?.currency || 'ZAR')
   const [isActive, setIsActive] = useState(account?.isActive ?? true)
   const [institutionOpen, setInstitutionOpen] = useState(false)
 
@@ -167,7 +167,7 @@ export function AccountForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="INR">INR - Indian Rupee</SelectItem>
+                  <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
                   <SelectItem value="USD">USD - US Dollar</SelectItem>
                   <SelectItem value="EUR">EUR - Euro</SelectItem>
                   <SelectItem value="GBP">GBP - British Pound</SelectItem>
