@@ -146,6 +146,27 @@ function initDatabase() {
     sqlite.run('PRAGMA journal_mode = WAL;')
     sqlite.run('PRAGMA foreign_keys = ON;')
 
+    // Lightweight compatibility migration for local SQLite databases.
+    // Older dev databases must be upgraded in-place when new document metadata
+    // is introduced; never require the user to delete/reset financial data.
+    const columns = sqlite
+      .query('PRAGMA table_info(statements)')
+      .all() as Array<{ name: string }>
+    const existingColumns = new Set(columns.map((column) => column.name))
+    const documentColumns: Array<[string, string]> = [
+      ['document_path', 'TEXT'],
+      ['raw_text', 'TEXT'],
+      ['extraction_attempts', 'INTEGER NOT NULL DEFAULT 0'],
+      ['extraction_provider', 'TEXT'],
+    ]
+
+    for (const [name, definition] of documentColumns) {
+      if (!existingColumns.has(name)) {
+        sqlite.run(\`ALTER TABLE statements ADD COLUMN \${name} \${definition}\`)
+        logger.debug(\`[DB] Added missing statements.\${name} column\`)
+      }
+    }
+
     const db = drizzleSqlite(sqlite, { schema: sqliteSchema })
     return { db, client: sqlite, type: 'sqlite' as const, schema: sqliteSchema }
   }
