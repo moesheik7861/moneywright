@@ -24,11 +24,11 @@ import { storeOriginalDocument } from '../lib/document-storage'
 
 const statementRoutes = new Hono<{ Variables: AuthVariables }>()
 
-async function setStatementDocumentPath(statementId: string, documentPath: string): Promise<void> {
+async function setStatementDocumentPath(statementId: string, documentPath: string, rawText?: string): Promise<void> {
   const now = dbType === 'postgres' ? new Date() : new Date().toISOString()
   await db
     .update(tables.statements)
-    .set({ documentPath, updatedAt: now as Date })
+    .set({ documentPath, rawText: rawText || null, updatedAt: now as Date })
     .where(eq(tables.statements.id, statementId))
 }
 
@@ -48,6 +48,71 @@ statementRoutes.get('/', async (c) => {
   })
 
   return c.json({ statements })
+})
+
+/**
+ * POST /statements/:id/retry
+ * Retry a retained statement after OCR/AI becomes available.
+ * Text-based documents can be retried immediately. Image-only PDFs remain pending
+ * until an OCR/vision worker has populated rawText.
+ */
+statementRoutes.post('/:id/retry', async (c) => {
+  const userId = c.get('userId')
+  const statementId = c.req.param('id')
+  const statement = await getStatementById(statementId, userId)
+
+  if (!statement) {
+    return c.json({ error: 'not_found', message: 'Statement not found' }, 404)
+  }
+
+  const [rawStatement] = await db
+    .select()
+    .from(tables.statements)
+    .where(eq(tables.statements.id, statementId))
+    .limit(1)
+
+  if (!rawStatement) {
+    return c.json({ error: 'not_found', message: 'Statement not found' }, 404)
+  }
+
+  if (!rawStatement.rawText || !rawStatement.rawText.trim()) {
+    await updateStatementStatus(
+      statementId,
+      'pending_ai',
+      'Document is retained, but it needs OCR/vision extraction before it can be retried.'
+    )
+    return c.json({
+      status: 'pending_ai',
+      message: 'Document retained. OCR/vision extraction is required before retry.',
+    }, 202)
+  }
+
+  const user = await findUserById(userId)
+  if (!user?.country) {
+    return c.json({ error: 'validation_error', message: 'User country not set' }, 400)
+  }
+
+  const body = await c.req.json().catch(() => ({}))
+  const parsingModel = typeof body?.parsingModel === 'string' ? body.parsingModel : undefined
+  const categorizationModel =
+    typeof body?.categorizationModel === 'string' ? body.categorizationModel : undefined
+
+  queueStatements({
+    statements: [{
+      statementId,
+      profileId: rawStatement.profileId,
+      userId,
+      pages: [rawStatement.rawText],
+      fileType: rawStatement.fileType as FileType,
+      documentType: rawStatement.documentType as 'bank_statement' | 'investment_statement',
+      parsingModel,
+      categorizationModel,
+    }],
+    countryCode: user.country as CountryCode,
+    categorizationModel,
+  })
+
+  return c.json({ status: 'pending', message: 'Statement queued for extraction' }, 202)
 })
 
 /**
@@ -163,7 +228,7 @@ statementRoutes.post('/upload', async (c) => {
       })
 
       const documentPath = await storeOriginalDocument(userId, statement.id, file.name, buffer)
-      await setStatementDocumentPath(statement.id, documentPath)
+      await setStatementDocumentPath(statement.id, documentPath, pages.length > 0 ? pages.join('\n\n') : undefined)
 
       // Extract text
       let pages: string[] = []
