@@ -35,8 +35,8 @@ const DEFAULT_FEATURES = [
   },
   {
     icon: <Shield className="w-4 h-4" />,
-    title: '100% Open Source',
-    description: 'Self-hosted and transparent - your data never leaves your control',
+    title: 'Private & Local-first',
+    description: 'Your financial data stays on your machine; cloud AI is optional',
   },
   {
     icon: <Users className="w-4 h-4" />,
@@ -51,7 +51,7 @@ export function AuthLayout({
   steps,
   title = 'Take control of',
   subtitle = 'your finances',
-  description = 'Moneywright helps you understand your spending, grow your savings, and make smarter financial decisions.',
+  description = 'Nexus Financial Management helps you understand your spending, grow your savings, and make smarter financial decisions.',
   features = DEFAULT_FEATURES,
 }: AuthLayoutProps) {
   return (
@@ -145,10 +145,10 @@ export function AuthLayout({
         >
           <div className="relative">
             <div className="absolute inset-0 bg-emerald-500/30 blur-2xl rounded-full scale-150" />
-            <img src="/logo.png" alt="Moneywright" className="relative h-14 w-14" />
+            <img src="/logo.png" alt="Nexus Financial Management" className="relative h-14 w-14" />
           </div>
           <span className="text-xl font-medium text-white/90 tracking-tight font-display">
-            Moneywright
+            Nexus Financial Management
           </span>
         </motion.div>
 
@@ -237,8 +237,8 @@ export function AuthLayout({
         {/* Mobile header */}
         <div className="lg:hidden p-6 flex items-center justify-between border-b border-white/5 shrink-0 relative z-10">
           <div className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="Moneywright" className="h-8 w-8" />
-            <span className="text-white font-medium font-display">Moneywright</span>
+            <img src="/logo.png" alt="Nexus Financial Management" className="h-8 w-8" />
+            <span className="text-white font-medium font-display">Nexus Financial Management</span>
           </div>
           {steps && steps.length > 0 && currentStep !== undefined && (
             <MobileStepIndicator steps={steps} currentStep={currentStep} />
