@@ -13,7 +13,6 @@ export const Route = createFileRoute('/onboarding/country')({
   component: CountrySelectionPage,
 })
 
-// Step definitions for AuthLayout
 const ONBOARDING_STEPS: AuthStep[] = [
   { id: 'country', label: 'Country' },
   { id: 'profile', label: 'Profile' },
@@ -33,21 +32,9 @@ function CountrySelectionPage() {
       subtitle="for you"
       description="We'll customize your experience based on your location — currency formats, tax categories, and local financial insights."
       features={[
-        {
-          icon: <Banknote className="w-4 h-4" />,
-          title: 'Local Currency',
-          description: 'Automatic formatting for your region',
-        },
-        {
-          icon: <Tags className="w-4 h-4" />,
-          title: 'Smart Categories',
-          description: 'Expense categories relevant to your country',
-        },
-        {
-          icon: <ShieldCheck className="w-4 h-4" />,
-          title: 'Auto FX Conversion',
-          description: 'Automatic currency conversion for international investments',
-        },
+        { icon: <Banknote className="w-4 h-4" />, title: 'Local Currency', description: 'Automatic formatting for your region' },
+        { icon: <Tags className="w-4 h-4" />, title: 'Smart Categories', description: 'Expense categories relevant to your country' },
+        { icon: <ShieldCheck className="w-4 h-4" />, title: 'Auto FX Conversion', description: 'Automatic currency conversion for international investments' },
       ]}
     >
       <motion.div
@@ -55,7 +42,6 @@ function CountrySelectionPage() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* Header */}
         <div className="mb-8">
           <motion.h1
             className="text-2xl font-semibold text-white tracking-tight font-display mb-2"
@@ -75,7 +61,6 @@ function CountrySelectionPage() {
           </motion.p>
         </div>
 
-        {/* Error message */}
         <AnimatePresence mode="wait">
           {error && (
             <motion.div
@@ -84,14 +69,11 @@ function CountrySelectionPage() {
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
               className="overflow-hidden"
             >
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                {error}
-              </div>
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Country options */}
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-zinc-600" />
@@ -103,9 +85,9 @@ function CountrySelectionPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            {/* India - enabled */}
+            {/* South Africa is the only enabled onboarding country for now. */}
             {countries
-              ?.filter((c) => c.code === 'IN')
+              ?.filter((c) => c.code === 'ZA')
               .map((country, index) => (
                 <CountryOption
                   key={country.code}
@@ -115,37 +97,9 @@ function CountrySelectionPage() {
                   index={index}
                 />
               ))}
-            {/* USA - coming soon */}
-            {countries
-              ?.filter((c) => c.code === 'US')
-              .map((country, index) => (
-                <CountryOption
-                  key={country.code}
-                  country={country}
-                  isSelected={false}
-                  onSelect={() => {}}
-                  index={index + 1}
-                  disabled
-                />
-              ))}
-            {/* Europe - coming soon */}
-            <CountryOption
-              country={{
-                code: 'EU',
-                name: 'Europe',
-                currency: 'EUR',
-                currencySymbol: '€',
-              }}
-              isSelected={false}
-              onSelect={() => {}}
-              index={2}
-              disabled
-            />
-            <p className="text-center text-sm text-zinc-500 pt-2">More countries coming soon</p>
           </motion.div>
         )}
 
-        {/* Continue button */}
         <motion.div
           className="mt-8"
           initial={{ opacity: 0, y: 10 }}
@@ -178,12 +132,7 @@ function CountrySelectionPage() {
 }
 
 interface CountryOptionProps {
-  country: {
-    code: string
-    name: string
-    currency: string
-    currencySymbol: string
-  }
+  country: { code: string; name: string; currency: string; currencySymbol: string }
   isSelected: boolean
   onSelect: () => void
   index: number
@@ -210,30 +159,20 @@ function CountryOption({ country, isSelected, onSelect, index, disabled }: Count
       whileHover={disabled ? undefined : { scale: 1.01 }}
       whileTap={disabled ? undefined : { scale: 0.99 }}
     >
-      {/* Flag */}
       <div
         className={cn(
           'flex items-center justify-center w-12 h-12 rounded-xl text-2xl transition-colors',
-          disabled
-            ? 'bg-zinc-800/50'
-            : isSelected
-              ? 'bg-emerald-500/20'
-              : 'bg-zinc-800/80 group-hover:bg-zinc-800'
+          disabled ? 'bg-zinc-800/50' : isSelected ? 'bg-emerald-500/20' : 'bg-zinc-800/80 group-hover:bg-zinc-800'
         )}
       >
         {getCountryFlag(country.code)}
       </div>
 
-      {/* Country info */}
       <div className="flex-1 min-w-0">
         <div
           className={cn(
             'font-medium transition-colors',
-            disabled
-              ? 'text-zinc-500'
-              : isSelected
-                ? 'text-white'
-                : 'text-zinc-300 group-hover:text-white'
+            disabled ? 'text-zinc-500' : isSelected ? 'text-white' : 'text-zinc-300 group-hover:text-white'
           )}
         >
           {country.name}
@@ -248,31 +187,18 @@ function CountryOption({ country, isSelected, onSelect, index, disabled }: Count
         </div>
       </div>
 
-      {/* Coming soon badge or Selection indicator */}
-      {disabled ? (
-        <span className="text-xs font-medium text-zinc-500 bg-zinc-800/80 px-2 py-1 rounded-full">
-          Coming soon
-        </span>
-      ) : (
-        <div
-          className={cn(
-            'flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200',
-            isSelected
-              ? 'bg-emerald-500 text-white'
-              : 'border-2 border-zinc-700 group-hover:border-zinc-600'
-          )}
-        >
-          {isSelected && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            >
-              <Check className="w-3.5 h-3.5" strokeWidth={3} />
-            </motion.div>
-          )}
-        </div>
-      )}
+      <div
+        className={cn(
+          'flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200',
+          isSelected ? 'bg-emerald-500 text-white' : 'border-2 border-zinc-700 group-hover:border-zinc-600'
+        )}
+      >
+        {isSelected && (
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }}>
+            <Check className="w-3.5 h-3.5" strokeWidth={3} />
+          </motion.div>
+        )}
+      </div>
     </motion.button>
   )
 }
