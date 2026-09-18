@@ -593,9 +593,8 @@ export async function recoverPendingStatements(): Promise<void> {
       // a deterministic parser for its stored text. Unknown formats remain
       // pending AI so we never burn through AI retries on every API restart.
       const canRetryLocally =
-        statement.rawText?.trim() &&
-        user.country === 'ZA' &&
-        /capitec(?:\s+bank)?/i.test(statement.rawText)
+        !!statement.rawText?.trim() &&
+        /c\s*a\s*p\s*i\s*t\s*e\s*c/i.test(statement.rawText)
 
       if (statement.status === 'pending_ai' && !canRetryLocally) {
         continue
