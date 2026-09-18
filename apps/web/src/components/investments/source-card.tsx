@@ -53,8 +53,8 @@ interface SourceCardProps {
   onDeleteHolding: (holdingId: string) => void
   formatCurrency: (amount: number | null | undefined, currency: string) => string
   formatPercentage: (value: number | null | undefined) => string
-  showInINR: boolean
-  convertToINR: (amount: number, currency: string) => number
+  showInZAR: boolean
+  convertToZAR: (amount: number, currency: string) => number
   getSourceTypeLabel: (code: string) => string
   /** Profiles list for showing profile badge in family view */
   profiles?: Profile[]
@@ -99,8 +99,8 @@ export function SourceCard({
   onDeleteHolding,
   formatCurrency,
   formatPercentage,
-  showInINR,
-  convertToINR,
+  showInZAR,
+  convertToZAR,
   getSourceTypeLabel,
   profiles,
   showProfileBadge,
@@ -108,22 +108,22 @@ export function SourceCard({
   const [showHoldings, setShowHoldings] = useState(false)
 
   // Calculate totals
-  const sourceTotal = holdings.reduce((sum, h) => sum + convertToINR(h.currentValue, h.currency), 0)
+  const sourceTotal = holdings.reduce((sum, h) => sum + convertToZAR(h.currentValue, h.currency), 0)
 
   // For gain calculation, only consider holdings with investedValue
   const holdingsWithInvested = holdings.filter(
     (h) => h.investedValue !== null && h.investedValue > 0
   )
   const sourceInvested = holdingsWithInvested.reduce(
-    (sum, h) => sum + convertToINR(h.investedValue!, h.currency),
+    (sum, h) => sum + convertToZAR(h.investedValue!, h.currency),
     0
   )
   const sourceGain =
-    holdingsWithInvested.reduce((sum, h) => sum + convertToINR(h.currentValue, h.currency), 0) -
+    holdingsWithInvested.reduce((sum, h) => sum + convertToZAR(h.currentValue, h.currency), 0) -
     sourceInvested
   const sourceGainPercent = sourceInvested > 0 ? (sourceGain / sourceInvested) * 100 : null
 
-  const displayCurrency = showInINR ? 'INR' : source.currency
+  const displayCurrency = showInZAR ? 'ZAR' : source.currency
   const isPositive = sourceGain >= 0
   const hasGains = sourceGainPercent !== null
 
@@ -278,8 +278,8 @@ export function SourceCard({
                     holdingTypes={holdingTypes}
                     formatCurrency={formatCurrency}
                     formatPercentage={formatPercentage}
-                    showInINR={showInINR}
-                    convertToINR={convertToINR}
+                    showInZAR={showInZAR}
+                    convertToZAR={convertToZAR}
                     onEdit={() => onEditHolding(holding)}
                     onDelete={() => onDeleteHolding(holding.id)}
                   />
