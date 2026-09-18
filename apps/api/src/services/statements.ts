@@ -569,7 +569,7 @@ export async function recoverPendingStatements(): Promise<void> {
         rawText: tables.statements.rawText,
       })
       .from(tables.statements)
-      .where(inArray(tables.statements.status, ['pending', 'parsing']))
+      .where(inArray(tables.statements.status, ['pending', 'parsing', 'pending_ai']))
 
     for (const statement of pending) {
       if (!statement.rawText?.trim()) {
@@ -589,6 +589,18 @@ export async function recoverPendingStatements(): Promise<void> {
 
       if (!user?.country) continue
 
+      // A pending-AI document can be retried automatically when we now have
+      // a deterministic parser for its stored text. Unknown formats remain
+      // pending AI so we never burn through AI retries on every API restart.
+      const canRetryLocally =
+        statement.rawText?.trim() &&
+        user.country === 'ZA' &&
+        /capitec(?:\s+bank)?/i.test(statement.rawText)
+
+      if (statement.status === 'pending_ai' && !canRetryLocally) {
+        continue
+      }
+
       queueStatements({
         statements: [{
           statementId: statement.id,
@@ -603,7 +615,9 @@ export async function recoverPendingStatements(): Promise<void> {
     }
 
     if (pending.length > 0) {
-      logger.debug(`[Statement] Recovered ${pending.length} pending statement job(s)`)
+      logger.debug(
+        `[Statement] Recovered ${pending.length} pending statement job(s) (including locally retryable AI-pending documents)`
+      )
     }
   } catch (error) {
     logger.error('[Statement] Failed to recover pending statements:', error)
