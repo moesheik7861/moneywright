@@ -502,7 +502,7 @@ export async function calculateNetWorth(
   const loanData = await getLoanLiabilities(userId, profileId)
   totalLiabilities += loanData.totalLoanLiabilities
 
-  // Determine primary currency (use most common, default to INR)
+  // Determine primary currency (use most common, default to South African Rand)
   const currencyCounts = accountBalances.reduce(
     (acc, ab) => {
       acc[ab.currency] = (acc[ab.currency] || 0) + 1
@@ -511,7 +511,7 @@ export async function calculateNetWorth(
     {} as Record<string, number>
   )
   const primaryCurrency =
-    Object.entries(currencyCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'INR'
+    Object.entries(currencyCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'ZAR'
 
   return {
     totalAssets,
