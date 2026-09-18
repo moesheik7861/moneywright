@@ -23,7 +23,7 @@ export const Route = createFileRoute('/subscriptions')({
 
 // Format currency for display
 function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat(currency === 'INR' ? 'en-IN' : 'en-US', {
+  return new Intl.NumberFormat(currency === 'ZAR' ? 'en-ZA' : currency === 'INR' ? 'en-IN' : 'en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: 0,
@@ -33,7 +33,7 @@ function formatCurrency(amount: number, currency: string): string {
 
 // Format date
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-IN', {
+  return new Date(dateStr).toLocaleDateString('en-ZA', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -114,7 +114,7 @@ function SubscriptionsPage() {
     null
   )
 
-  const countryCode = user?.country?.toLowerCase() || 'in'
+  const countryCode = user?.country?.toLowerCase() || 'za'
 
   // Query enabled when we have a profileId OR we're in family view
   const queryEnabled = !!activeProfileId || showFamilyView
@@ -142,7 +142,7 @@ function SubscriptionsPage() {
     () => subscriptionsData?.subscriptions || [],
     [subscriptionsData?.subscriptions]
   )
-  const currency = subscriptionsData?.currency || 'INR'
+  const currency = subscriptionsData?.currency || 'ZAR'
 
   // Calculate stats (for active subscriptions only)
   const stats = useMemo(() => {
