@@ -33,18 +33,23 @@ const APP_DIR = isCompiledBinary ? dirname(process.execPath) : import.meta.dir
 // SQLite database path
 // Priority: SQLITE_PATH env var > DATA_DIR env var > APP_DIR/data/app.db
 const getDefaultSqlitePath = () => {
-  // Desktop sidecar: Tauri sets DATA_DIR to writable location
-  // In development, always use the project-local database. This prevents
-  // a DATA_DIR inherited from a desktop/installed environment from redirecting
-  // the dev server to an unrelated database.
-  if (process.env.DATA_DIR && process.env.APP_ENV !== 'development') {
+  // Development must always use the project-local database.
+  // Check APP_ENV first so desktop DATA_DIR cannot redirect the dev server.
+  if (process.env.APP_ENV === 'development') {
+    return join(APP_DIR, '..', '..', 'data', 'app.db')
+  }
+
+  // Desktop sidecar: Tauri sets DATA_DIR to the writable app-data location.
+  if (process.env.DATA_DIR) {
     return join(process.env.DATA_DIR, 'data', 'app.db')
   }
-  // Standalone binary: data/ folder next to binary
+
+  // Standalone binary: data/ folder next to binary.
   if (isCompiledBinary) {
     return join(APP_DIR, 'data', 'app.db')
   }
-  // Development: apps/api/data/
+
+  // Fallback for non-desktop, non-development Bun execution.
   return join(APP_DIR, '..', '..', 'data', 'app.db')
 }
 
