@@ -9,7 +9,7 @@ import { nanoid } from '../lib/id'
  * Statement service - simplified
  */
 
-export type StatementStatus = 'pending' | 'parsing' | 'completed' | 'failed'
+export type StatementStatus = 'pending' | 'parsing' | 'pending_ai' | 'completed' | 'failed'
 
 export interface BankStatementSummary {
   type: 'bank_statement'
@@ -46,6 +46,9 @@ export interface StatementResponse {
   originalFilename: string
   fileType: string
   fileSizeBytes: number | null
+  documentPath: string | null
+  extractionAttempts: number
+  extractionProvider: string | null
   documentType: string
   periodStart: string | null
   periodEnd: string | null
@@ -117,6 +120,9 @@ function toStatementResponse(statement: Statement): StatementResponse {
     originalFilename: statement.originalFilename,
     fileType: statement.fileType,
     fileSizeBytes: statement.fileSizeBytes,
+    documentPath: statement.documentPath || null,
+    extractionAttempts: statement.extractionAttempts || 0,
+    extractionProvider: statement.extractionProvider || null,
     documentType: statement.documentType || 'bank_statement',
     periodStart: statement.periodStart,
     periodEnd: statement.periodEnd,
@@ -220,6 +226,8 @@ export async function createStatement(data: {
   originalFilename: string
   fileType: string
   fileSizeBytes: number
+  documentPath?: string | null
+  rawText?: string | null
   documentType?: 'bank_statement' | 'investment_statement'
 }): Promise<Statement> {
   const now = dbType === 'postgres' ? new Date() : new Date().toISOString()
@@ -233,6 +241,8 @@ export async function createStatement(data: {
       originalFilename: data.originalFilename,
       fileType: data.fileType,
       fileSizeBytes: data.fileSizeBytes,
+      documentPath: data.documentPath || null,
+      rawText: data.rawText || null,
       documentType: data.documentType || 'bank_statement',
       status: 'pending',
       transactionCount: 0,
