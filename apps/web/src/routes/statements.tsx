@@ -16,6 +16,7 @@ import {
   useConstants,
   useDeleteStatement,
   useProfileSelection,
+  retryStatement,
 } from '@/hooks'
 import { StatementCard, FilterBar, UploadForm, type SortOption } from '@/components/statements'
 import { RecategorizeModal } from '@/components/transactions/recategorize-modal'
@@ -247,6 +248,14 @@ function StatementsPage() {
                   formatFileSize={formatFileSize}
                   formatPeriod={formatPeriod}
                   onDelete={() => deleteMutation.mutate(statement.id)}
+                  onRetry={
+                    statement.status === 'pending_ai'
+                      ? async () => {
+                          await retryStatement(statement.id)
+                          await queryClient.invalidateQueries({ queryKey: ['statements'] })
+                        }
+                      : undefined
+                  }
                   onRecategorize={() => setRecategorizeStatement(statement)}
                   profiles={profiles}
                   showProfileBadge={showFamilyView}
