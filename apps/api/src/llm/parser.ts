@@ -537,6 +537,7 @@ export async function parseStatement(options: {
   // For bank/credit card statements without accountId, we need to create a placeholder
   // that will be updated with real info during parsing
   let accountIdToUse = statement.accountId
+  let createdPlaceholderAccount = false
   if (!accountIdToUse) {
     // Import createAccount to create placeholder
     const { createAccount } = await import('../services/accounts')
@@ -549,9 +550,10 @@ export async function parseStatement(options: {
       institution: null,
       accountNumber: null,
       accountName: `Pending - ${statement.originalFilename}`,
-      currency: user?.country === 'IN' ? 'INR' : 'USD',
+      currency: user?.country === 'ZA' ? 'ZAR' : user?.country === 'IN' ? 'INR' : 'USD',
     })
     accountIdToUse = tempAccount.id
+    createdPlaceholderAccount = true
 
     // Update statement with the new account ID
     const now = dbType === 'postgres' ? new Date() : new Date().toISOString()
@@ -623,9 +625,24 @@ export async function parseStatement(options: {
       logger.error(
         `[Parser] All ${MAX_ACCOUNT_INFO_RETRIES} account info extraction attempts failed`
       )
-      await updateStatementStatus(statementId, 'failed', errorMessage)
+
+      // Do not destroy the user's document or leave a ghost placeholder account.
+      // The statement becomes a durable pending-AI job and can be retried later.
+      if (createdPlaceholderAccount && accountIdToUse) {
+        await db.delete(tables.accounts).where(eq(tables.accounts.id, accountIdToUse))
+        await db
+          .update(tables.statements)
+          .set({ accountId: null })
+          .where(eq(tables.statements.id, statementId))
+      }
+
+      await updateStatementStatus(
+        statementId,
+        'pending_ai',
+        `AI extraction required: ${errorMessage}`
+      )
       throw new Error(
-        `Account info extraction failed after ${MAX_ACCOUNT_INFO_RETRIES} attempts: ${errorMessage}`
+        `AI_REQUIRED: Account info extraction failed after ${MAX_ACCOUNT_INFO_RETRIES} attempts: ${errorMessage}`
       )
     }
   }
