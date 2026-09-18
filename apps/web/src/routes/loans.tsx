@@ -424,7 +424,7 @@ function LoanCard({
   // Format currency
   const formatAmount = (amount: number | null) => {
     if (amount === null) return '-'
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       maximumFractionDigits: 0,
     }).format(amount)
   }
@@ -1256,7 +1256,7 @@ function LoanDetailSheet({
   // Format currency - always show absolute numbers, rounded
   const formatAmount = (amount: number | null) => {
     if (amount === null) return '—'
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       maximumFractionDigits: 0,
     }).format(Math.round(amount))
   }
@@ -2245,7 +2245,7 @@ function LoanCard({
   // Format currency
   const formatAmount = (amount: number | null) => {
     if (amount === null) return '-'
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       maximumFractionDigits: 0,
     }).format(amount)
   }
@@ -3077,7 +3077,7 @@ function LoanDetailSheet({
   // Format currency - always show absolute numbers, rounded
   const formatAmount = (amount: number | null) => {
     if (amount === null) return '—'
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       maximumFractionDigits: 0,
     }).format(Math.round(amount))
   }
