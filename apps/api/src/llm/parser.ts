@@ -475,12 +475,13 @@ export async function parseStatement(options: {
 
   // Deterministic country/bank parsers run before any AI call.
   // Capitec is the first South African parser and can handle standard text PDFs locally.
-  const localCapitec =
-    countryCode === 'ZA' ? parseCapitecStatement(fullText) : null
+  const localCapitec = parseCapitecStatement(fullText)
   if (localCapitec) {
     logger.debug(
       `[Parser] Local Capitec parser matched: ${localCapitec.transactions.length} transactions, confidence=${localCapitec.confidence}`
     )
+  } else {
+    logger.debug('[Parser] Local Capitec parser did not match this document')
   }
 
   if (pages.length > MAX_PAGES_BEFORE_TRUNCATION) {
