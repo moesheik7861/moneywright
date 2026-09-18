@@ -282,7 +282,7 @@ function TransactionsPage() {
 
         {/* Transactions Table */}
         {transactionsLoading ? (
-          <TableSkeleton rows={10} columns={4} />
+          <TableSkeleton rows={10} columns={7} />
         ) : transactions.length > 0 ? (
           <TransactionTable
             transactions={transactions}
