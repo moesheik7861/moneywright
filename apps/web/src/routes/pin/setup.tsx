@@ -74,7 +74,7 @@ function PinSetupPage() {
       currentStep={currentStepIndex}
       steps={STEPS}
       title="Welcome to"
-      subtitle="Moneywright"
+      subtitle="Nexus Financial Management"
       description="Track your bank accounts, investments, loans, and insurance — all in one place, powered by AI."
       features={[
         {
