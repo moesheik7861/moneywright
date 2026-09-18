@@ -573,6 +573,11 @@ export async function recoverPendingStatements(): Promise<void> {
       .where(inArray(tables.statements.status, ['pending', 'parsing', 'pending_ai']))
 
     for (const statement of pending) {
+      const rawTextLength = statement.rawText?.length || 0
+      logger.debug(
+        `[Statement] Recovery candidate ${statement.id}: status=${statement.status}, rawText=${rawTextLength} chars`
+      )
+
       if (!statement.rawText?.trim()) {
         await updateStatementStatus(
           statement.id,
@@ -591,9 +596,15 @@ export async function recoverPendingStatements(): Promise<void> {
       // A pending-AI document can be retried automatically when we now have
       // a deterministic parser for its stored text. Unknown formats remain
       // pending AI so we never burn through AI retries on every API restart.
-      const compactDocumentText = (statement.rawText || '').replace(/[^a-z]/gi, '').toLowerCase()
+      const compactDocumentText = (statement.rawText || '')
+        .replace(/[^a-z]/gi, '')
+        .toLowerCase()
       const canRetryLocally =
         compactDocumentText.includes('capitec') && compactDocumentText.includes('bank')
+
+      logger.debug(
+        `[Statement] Recovery parser check ${statement.id}: localCapitec=${canRetryLocally}`
+      )
 
       if (statement.status === 'pending_ai' && !canRetryLocally) {
         logger.debug(
@@ -605,7 +616,7 @@ export async function recoverPendingStatements(): Promise<void> {
       // Capitec documents are unambiguously ZAR/South African for the
       // deterministic local parser, so they can recover even if the user
       // country was not persisted correctly during an earlier onboarding run.
-      const effectiveCountry = user?.country || (canRetryLocally ? 'ZA' : null)
+      const effectiveCountry = canRetryLocally ? 'ZA' : user?.country || null
       if (!effectiveCountry) {
         logger.warn(
           `[Statement] Cannot recover ${statement.id}: user country is not set`
