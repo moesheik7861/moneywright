@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Moneywright",
+  "productName": "Nexus Financial Management",
   "version": "0.8.0",
   "identifier": "com.moneywright.desktop",
   "build": {
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Moneywright",
+        "title": "Nexus Financial Management",
         "width": 1280,
         "height": 800,
         "resizable": true,
@@ -57,11 +57,11 @@
       "binaries/drizzle": "drizzle",
       "binaries/public": "public"
     },
-    "publisher": "Moneywright",
+    "publisher": "Nexus Financial Management",
     "copyright": "Copyright (c) 2025 Moneywright",
     "category": "Finance",
-    "shortDescription": "Personal finance manager",
-    "longDescription": "Moneywright is a privacy-focused personal finance manager that runs locally on your machine. Upload bank statements, track expenses, and get AI-powered insights - all without sharing your data.",
+    "shortDescription": "Private personal finance management",
+    "longDescription": "Nexus Financial Management is a private, local-first personal finance manager for South Africa. Upload statements and financial documents, track your finances, and use the AI provider you choose.",
     "macOS": {
       "minimumSystemVersion": "10.15",
       "hardenedRuntime": true,
