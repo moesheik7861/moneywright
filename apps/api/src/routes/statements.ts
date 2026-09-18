@@ -229,6 +229,10 @@ statementRoutes.post('/upload', async (c) => {
 
       const documentPath = await storeOriginalDocument(userId, statement.id, file.name, buffer)
 
+      // Persist the original document path immediately. Even if text extraction
+      // fails, recovery can reopen the exact source file later.
+      await setStatementDocumentPath(statement.id, documentPath)
+
       // Extract text
       let pages: string[] = []
       let usedPassword: string | null = null
@@ -312,7 +316,13 @@ statementRoutes.post('/upload', async (c) => {
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error'
-        errors.push({ filename: file.name, error: message })
+        await updateStatementStatus(
+          statement.id,
+          'pending_ai',
+          `Text extraction failed. Original document retained for OCR/AI retry: ${message}`
+        )
+        errors.push({ filename: file.name, error: `Document stored for OCR/AI extraction: ${message}` })
+        statementIds.push(statement.id)
         continue
       }
 
