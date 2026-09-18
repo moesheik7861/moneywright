@@ -7,18 +7,60 @@ import { ArrowUpRight, ArrowDownRight, type LucideIcon } from 'lucide-react'
 // Format currency using South African defaults with generic fallbacks.
 function getCurrencyLocale(currency: string): string {
   switch (currency.toUpperCase()) {
-    case 'ZAR': return 'en-ZA'
-    case 'INR': return 'en-IN'
-    case 'GBP': return 'en-GB'
-    case 'EUR': return 'en-GB'
-    default: return 'en-US'
+    case 'ZAR':
+      return 'en-ZA'
+    case 'INR':
+      return 'en-IN'
+    case 'GBP':
+      return 'en-GB'
+    case 'EUR':
+      return 'en-GB'
+    default:
+      return 'en-US'
   }
 }
 
 function getCurrencySymbol(currency: string): string {
   switch (currency.toUpperCase()) {
-    case 'ZAR': return 'R'
-    case 'USD': return '
+    case 'ZAR':
+      return 'R'
+    case 'USD':
+      return '$'
+    case 'INR':
+      return '₹'
+    case 'GBP':
+      return '£'
+    case 'EUR':
+      return '€'
+    default:
+      return currency.toUpperCase()
+  }
+}
+
+function formatCompact(amount: number, currency: string = 'ZAR'): string {
+  const absAmount = Math.abs(amount)
+  const sign = amount < 0 ? '-' : ''
+  const symbol = getCurrencySymbol(currency)
+  if (absAmount >= 1_000_000_000) return `${sign}${symbol}${(absAmount / 1_000_000_000).toFixed(2)}B`
+  if (absAmount >= 1_000_000) return `${sign}${symbol}${(absAmount / 1_000_000).toFixed(2)}M`
+  if (absAmount >= 10_000) return `${sign}${symbol}${(absAmount / 1_000).toFixed(1)}K`
+  return new Intl.NumberFormat(getCurrencyLocale(currency), {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+function formatFull(amount: number, currency: string = 'ZAR'): string {
+  return new Intl.NumberFormat(getCurrencyLocale(currency), {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
 function getValueFontSize(valueStr: string): string {
   const len = valueStr.length
   if (len > 16) return 'text-sm sm:text-base'
@@ -32,7 +74,7 @@ export interface StatCardProps {
   label: string
   /** The numeric value to display */
   value?: number | null
-  /** Currency code for formatting (default: INR) */
+  /** Currency code for formatting (default: ZAR) */
   currency?: string
   /** Subtitle text displayed below the value */
   subtitle?: string
