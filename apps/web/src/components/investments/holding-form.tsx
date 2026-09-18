@@ -200,7 +200,7 @@ export function HoldingForm({
           <Label htmlFor="isin">ISIN</Label>
           <Input
             id="isin"
-            placeholder="e.g., ZAE000000000"
+            placeholder="e.g., ZAE000… (optional)"
             value={isin}
             onChange={(e) => setIsin(e.target.value)}
             className="h-11"
