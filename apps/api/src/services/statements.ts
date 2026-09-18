@@ -8,6 +8,7 @@ import type { Statement } from '../db'
 import { logger } from '../lib/logger'
 import type { CountryCode, FileType } from '../lib/constants'
 import { nanoid } from '../lib/id'
+import { decryptOptional } from '../lib/encryption'
 
 /**
  * Statement service - simplified
@@ -704,6 +705,69 @@ export async function recoverPendingStatements(): Promise<void> {
     }
   } catch (error) {
     logger.error('[Statement] Failed to recover pending statements:', error)
+  }
+}
+
+/**
+ * Repair Capitec statements imported before account-number validation was tightened.
+ * Never keeps transactions attached to an obviously invalid short account number.
+ */
+export async function repairInvalidCapitecImports(): Promise<void> {
+  try {
+    const capitecAccounts = await db
+      .select({
+        id: tables.accounts.id,
+        profileId: tables.accounts.profileId,
+        userId: tables.accounts.userId,
+        accountNumber: tables.accounts.accountNumber,
+        institution: tables.accounts.institution,
+      })
+      .from(tables.accounts)
+      .where(eq(tables.accounts.institution, 'capitec'))
+
+    for (const account of capitecAccounts) {
+      if (!account.accountNumber) continue
+
+      const accountNumber = decryptOptional(account.accountNumber) || ''
+      const digits = accountNumber.replace(/[^0-9]/g, '')
+
+      if (digits.length === 10) continue
+
+      const affectedStatements = await db
+        .select({ id: tables.statements.id })
+        .from(tables.statements)
+        .where(eq(tables.statements.accountId, account.id))
+
+      if (affectedStatements.length === 0) continue
+
+      logger.warn(
+        `[Statement] Repairing Capitec account ${account.id}: invalid account number length ${digits.length}; resetting ${affectedStatements.length} statement(s)`
+      )
+
+      for (const statement of affectedStatements) {
+        await db.delete(tables.transactions).where(eq(tables.transactions.statementId, statement.id))
+        const now = dbType === 'postgres' ? new Date() : new Date().toISOString()
+        await db
+          .update(tables.statements)
+          .set({
+            accountId: null,
+            status: 'pending',
+            transactionCount: 0,
+            periodStart: null,
+            periodEnd: null,
+            openingBalance: null,
+            closingBalance: null,
+            summary: null,
+            errorMessage: 'Previous import used an invalid Capitec account number. Reprocessing retained source.',
+            updatedAt: now as Date,
+          })
+          .where(eq(tables.statements.id, statement.id))
+      }
+
+      await db.delete(tables.accounts).where(eq(tables.accounts.id, account.id))
+    }
+  } catch (error) {
+    logger.error('[Statement] Failed to repair invalid Capitec imports:', error)
   }
 }
 
