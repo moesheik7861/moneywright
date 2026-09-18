@@ -228,7 +228,6 @@ statementRoutes.post('/upload', async (c) => {
       })
 
       const documentPath = await storeOriginalDocument(userId, statement.id, file.name, buffer)
-      await setStatementDocumentPath(statement.id, documentPath, pages.length > 0 ? pages.join('\n\n') : undefined)
 
       // Extract text
       let pages: string[] = []
@@ -316,6 +315,9 @@ statementRoutes.post('/upload', async (c) => {
         errors.push({ filename: file.name, error: message })
         continue
       }
+
+      // Persist extracted text for later AI/OCR retry without re-uploading the file.
+      await setStatementDocumentPath(statement.id, documentPath, pages.join('\n\n'))
 
       if (pages.length === 0 || pages.every((p) => p.trim() === '')) {
         await updateStatementStatus(
