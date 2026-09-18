@@ -10,7 +10,7 @@ function money(value: string): number {
 
 function isoDate(value: string): string {
   const [day, month, year] = value.split('/')
-  return \`\${year}-\${month}-\${day}\`
+  return `${year}-${month}-${day}`
 }
 
 function firstMatch(text: string, regex: RegExp): string | null {
