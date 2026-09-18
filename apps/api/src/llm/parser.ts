@@ -429,6 +429,8 @@ export async function parseStatement(options: {
   parsingModel?: string
   /** Model for transaction categorization */
   categorizationModel?: string
+  /** Recovery mode: run deterministic parsers only and never call an AI provider. */
+  localOnly?: boolean
 }): Promise<void> {
   const {
     statementId,
@@ -441,6 +443,7 @@ export async function parseStatement(options: {
     sourceType,
     parsingModel,
     categorizationModel,
+    localOnly = false,
   } = options
 
   // Use specific models if provided
@@ -482,6 +485,11 @@ export async function parseStatement(options: {
     )
   } else {
     logger.debug('[Parser] Local Capitec parser did not match this document')
+    if (localOnly) {
+      const message = 'No deterministic local parser matched this document. AI extraction is still required.'
+      await updateStatementStatus(statementId, 'pending_ai', message)
+      throw new Error(`AI_REQUIRED: ${message}`)
+    }
   }
 
   if (pages.length > MAX_PAGES_BEFORE_TRUNCATION) {
