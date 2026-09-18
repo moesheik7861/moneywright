@@ -52,7 +52,7 @@ investmentRoutes.get('/types', async (c) => {
     return c.json({ error: 'not_found', message: 'User not found' }, 404)
   }
 
-  const countryCode = (user.country || 'IN') as CountryCode
+  const countryCode = (user.country || 'ZA') as CountryCode
   const sourceTypes = getInvestmentSourceTypesForCountry(countryCode)
 
   return c.json({
