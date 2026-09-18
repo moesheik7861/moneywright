@@ -1081,6 +1081,15 @@ export type CategoryCode = (typeof TRANSACTION_CATEGORIES)[CountryCode][number][
  * Investment types by country
  */
 export const INVESTMENT_TYPES = {
+  ZA: [
+    { code: 'etf', label: 'ETF' },
+    { code: 'stocks', label: 'Shares / Stocks' },
+    { code: 'mutual_fund', label: 'Unit Trust / Mutual Fund' },
+    { code: 'reit', label: 'REIT' },
+    { code: 'bonds', label: 'Bonds' },
+    { code: 'gold', label: 'Gold' },
+    { code: 'other', label: 'Other' },
+  ],
   IN: [
     { code: 'mutual_fund', label: 'Mutual Fund' },
     { code: 'stocks', label: 'Stocks' },
