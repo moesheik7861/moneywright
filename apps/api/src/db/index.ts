@@ -36,7 +36,9 @@ const getDefaultSqlitePath = () => {
   // Development must always use the project-local database.
   // Check APP_ENV first so desktop DATA_DIR cannot redirect the dev server.
   if (process.env.APP_ENV === 'development') {
-    return join(APP_DIR, '..', '..', 'data', 'app.db')
+    // The dev API runs with apps/api as its working directory.
+    // Resolve from cwd so the database is always <repo>/data/app.db.
+    return join(process.cwd(), '..', '..', 'data', 'app.db')
   }
 
   // Desktop sidecar: Tauri sets DATA_DIR to the writable app-data location.
