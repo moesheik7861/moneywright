@@ -107,7 +107,7 @@ app.use('*', securityHeaders())
 if (isDevelopment()) {
   app.get('/', (c) =>
     c.json({
-      name: 'Moneywright API',
+      name: 'Nexus Financial Management API',
       message: 'Welcome to the API',
     })
   )
