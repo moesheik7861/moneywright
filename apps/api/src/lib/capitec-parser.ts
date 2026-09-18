@@ -61,19 +61,30 @@ export function looksLikeCapitecStatement(text: string): boolean {
 export function parseCapitecStatement(text: string): CapitecLocalParseResult | null {
   if (!looksLikeCapitecStatement(text)) return null
 
-  const accountNumber = extractTextValue(text, [
-    /\bAccount(?:\s+Number)?\s*:\s*([0-9]{6,20})/i,
-    /\bAccount(?:\s+Number)?\s+([0-9]{6,20})/i,
-    /\bAccount(?:\s+Number)?\s*[:\s]*\n?\s*([0-9]{6,20})/i,
-  ])
-  const fromDate = extractTextValue(text, [
-    /\bFrom\s+Date\s*:\s*(\d{2}\/\d{2}\/\d{4})/i,
-    /\bFrom\s+Date\s*:\s*\n?\s*(\d{2}\/\d{2}\/\d{4})/i,
-  ])
-  const toDate = extractTextValue(text, [
-    /\bTo\s+Date\s*:\s*(\d{2}\/\d{2}\/\d{4})/i,
-    /\bTo\s+Date\s*:\s*\n?\s*(\d{2}\/\d{2}\/\d{4})/i,
-  ])
+  const normalized = text.replace(/\u00a0/g, ' ').replace(/\r/g, '').replace(/\f/g, '\n')
+
+  const accountNumber =
+    extractTextValue(normalized, [
+      /\bAccount(?:\s+Number)?\s*:\s*([0-9][0-9\s-]{5,25})/i,
+      /\bAccount(?:\s+Number)?\s+([0-9][0-9\s-]{5,25})/i,
+      /\bAccount(?:\s+Number)?\s*[:\s]*\n\s*([0-9][0-9\s-]{5,25})/i,
+    ])
+      ?.replace(/[^0-9]/g, '')
+      .slice(0, 20) || null
+
+  const fromDate =
+    extractTextValue(normalized, [
+      /\bFrom\s+Date\s*:\s*(\d{2}\/\d{2}\/\d{4})/i,
+      /\bFrom\s+Date\s*:\s*\n\s*(\d{2}\/\d{2}\/\d{4})/i,
+    ]) ||
+    firstMatch(normalized, /\bFrom\s+Date\s*[:]?\s*(?:\n\s*)?(\d{2}\/\d{2}\/\d{4})/i)
+
+  const toDate =
+    extractTextValue(normalized, [
+      /\bTo\s+Date\s*:\s*(\d{2}\/\d{2}\/\d{4})/i,
+      /\bTo\s+Date\s*:\s*\n\s*(\d{2}\/\d{2}\/\d{4})/i,
+    ]) ||
+    firstMatch(normalized, /\bTo\s+Date\s*[:]?\s*(?:\n\s*)?(\d{2}\/\d{2}\/\d{4})/i)
   const opening = firstMatch(
     text,
     /\bOpening\s+Balance\s*:\s*(R?\s?[\d\s,]+\.\d{2})/i
