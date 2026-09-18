@@ -88,9 +88,9 @@ export function CreditCardDisplay({
     : null
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
-      currency: account.currency || 'INR',
+      currency: account.currency || 'ZAR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
@@ -256,7 +256,7 @@ export function CreditCardDetailModal({
   // Format currency
   const formatAmount = (amount: number | null) => {
     if (amount === null) return '—'
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       maximumFractionDigits: 0,
     }).format(Math.abs(Math.round(amount)))
   }
@@ -437,7 +437,7 @@ export function CreditCardDetailModal({
               <MetricCard
                 icon={Banknote}
                 label="Currency"
-                value={account.currency || 'INR'}
+                value={account.currency || 'ZAR'}
                 iconColor="text-blue-500"
                 iconBg="bg-blue-500/10"
               />
