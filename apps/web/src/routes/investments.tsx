@@ -129,7 +129,7 @@ function InvestmentsPage() {
     if (amount === null || amount === undefined) return '-'
     const displayAmount = localConvertToZAR(amount, currency)
     const displayCurrency = showInZAR ? 'ZAR' : currency
-    return new Intl.NumberFormat('en-IN', {
+    return new Intl.NumberFormat('en-ZA', {
       style: 'currency',
       currency: displayCurrency,
       minimumFractionDigits: 0,
