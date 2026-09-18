@@ -620,7 +620,10 @@ function getDeterministicCategory(
     }
   }
 
-  if (/\bfuel\b|\bpetrol\b|\bdiesel\b|astron\s+energies|\beng(?:en)?\b|\bshell\b|\bbp\b|\btotalenergies\b|\bsasol\b/.test(text)) {
+  // A fuel-station merchant can also sell convenience-store goods (e.g. Engen).
+  // Only classify as fuel when the description contains explicit fuel wording;
+  // merchant name alone is intentionally insufficient.
+  if (/\bfuel\b|\bpetrol\b|\bdiesel\b|\brefuel(?:l?ing)?\b/.test(text)) {
     return {
       id: txn.id,
       category: countryCode === 'US' ? 'gas' : 'fuel',
