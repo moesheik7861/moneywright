@@ -1,6 +1,5 @@
 import { defineConfig } from 'drizzle-kit'
 
-// Determine database type from environment
 const DATABASE_URL = process.env.DATABASE_URL
 const isPostgres = !!DATABASE_URL
 
@@ -19,7 +18,9 @@ export default defineConfig(
         schema: './src/db/schema.sqlite.ts',
         out: './drizzle/sqlite',
         dbCredentials: {
-          url: process.env.SQLITE_PATH || './data/app.db',
+          // drizzle-kit runs with apps/api as its working directory.
+          // Keep dev SQLite aligned with the API's project-local database.
+          url: process.env.SQLITE_PATH || '../../data/app.db',
         },
       }
 )
