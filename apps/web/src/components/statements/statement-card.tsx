@@ -42,6 +42,7 @@ interface StatementCardProps {
   formatPeriod: (start: string | null, end: string | null) => string | null
   onDelete: () => void
   onRecategorize?: () => void
+  onRetry?: () => void
   /** Profiles list for showing profile badge in family view */
   profiles?: Profile[]
   /** Whether to show profile badge (family view mode) */
@@ -57,6 +58,7 @@ export function StatementCard({
   formatPeriod,
   onDelete,
   onRecategorize,
+  onRetry,
   profiles,
   showProfileBadge,
 }: StatementCardProps) {
@@ -179,6 +181,15 @@ export function StatementCard({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
+                {/* Retry retained documents that need AI/OCR or were previously unable to parse */}
+                {isPendingAi && onRetry && (
+                  <DropdownMenuItem onClick={onRetry} className="cursor-pointer">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry extraction
+                  </DropdownMenuItem>
+                )}
+                {isPendingAi && onRetry && <DropdownMenuSeparator />}
+
                 {/* Only show recategorize for bank/credit card statements that are completed */}
                 {!isInvestment && isCompleted && onRecategorize && (
                   <>
