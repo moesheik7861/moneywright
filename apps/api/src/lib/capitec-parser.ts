@@ -63,7 +63,9 @@ export function looksLikeCapitecStatement(text: string): boolean {
 
 function normalizeAccountCandidate(value: string): string | null {
   const digits = value.replace(/[^0-9]/g, '')
-  return digits.length >= 6 && digits.length <= 20 ? digits : null
+  // Capitec uses 10-digit account numbers. Reject shorter values so a date
+  // fragment such as "202615" can never become the linked account.
+  return digits.length === 10 ? digits : null
 }
 
 function extractAccountNumber(text: string): string | null {
@@ -77,7 +79,7 @@ function extractAccountNumber(text: string): string | null {
     if (!/\bAccount(?:\s+Number)?\b/i.test(lines[i]!)) continue
 
     const nearby = lines.slice(i, Math.min(i + 5, lines.length)).join(' ')
-    const candidates = nearby.match(/[0-9][0-9\s-]{5,25}/g) || []
+    const candidates = nearby.match(/[0-9][0-9\s-]{9,29}/g) || []
     for (const candidate of candidates) {
       const normalizedCandidate = normalizeAccountCandidate(candidate)
       if (normalizedCandidate) return normalizedCandidate
@@ -94,7 +96,7 @@ function extractAccountNumber(text: string): string | null {
   // Last deterministic fallback: locate the first plausible 6-20 digit value
   // immediately after the word "Account", ignoring PDF whitespace/punctuation.
   const compact = normalized.replace(/[^A-Za-z0-9]/g, ' ')
-  const compactMatch = compact.match(/\bAccount\s+(?:Number\s+)?(\d(?:[\d ]{5,25}))\b/i)
+  const compactMatch = compact.match(/\bAccount\s+(?:Number\s+)?(\d(?:[\d ]{9,29}))\b/i)
   return compactMatch?.[1] ? normalizeAccountCandidate(compactMatch[1]) : null
 }
 
