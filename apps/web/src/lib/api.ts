@@ -653,7 +653,7 @@ export interface Statement {
   fileSizeBytes: number | null
   periodStart: string | null
   periodEnd: string | null
-  status: 'pending' | 'parsing' | 'completed' | 'failed'
+  status: 'pending' | 'parsing' | 'pending_ai' | 'completed' | 'failed'
   errorMessage: string | null
   summary: Record<string, unknown> | null
   transactionCount: number
