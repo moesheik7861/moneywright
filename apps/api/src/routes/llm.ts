@@ -20,6 +20,29 @@ llmRoutes.use('*', auth())
 
 const LLM_PROVIDERS = ['openai', 'anthropic', 'google', 'vercel', 'ollama'] as const
 
+async function getInstalledOllamaModels(baseUrl: string): Promise<Array<{ id: string; name: string; supportsThinking: boolean }>> {
+  try {
+    const rootUrl = baseUrl.replace(/\/api\/?$/, '')
+    const response = await fetch(`${rootUrl}/api/tags`)
+    if (!response.ok) return []
+
+    const data = (await response.json()) as {
+      models?: Array<{ name?: string; model?: string }>
+    }
+
+    return (data.models || [])
+      .map((m) => m.name || m.model || '')
+      .filter(Boolean)
+      .map((id) => ({
+        id,
+        name: id,
+        supportsThinking: false,
+      }))
+  } catch {
+    return []
+  }
+}
+
 /**
  * Update LLM settings request schema
  * Only API keys and Ollama base URL - no provider/model settings
@@ -97,20 +120,33 @@ llmRoutes.get('/providers', async (c) => {
   const userId = c.get('userId')
   const settings = await getLLMSettings()
 
-  // Get custom Ollama models for this user
+  // Combine models registered in Moneywright with models actually installed
+  // in the user's local Ollama instance. Installed models should not require
+  // manual re-entry in the web UI.
   const ollamaCustomModels = await getOllamaCustomModels(userId)
+  const installedOllamaModels = settings.ollamaBaseUrl
+    ? await getInstalledOllamaModels(settings.ollamaBaseUrl)
+    : []
+
+  const ollamaModels = [
+    ...installedOllamaModels.map((m) => ({
+      id: m.id,
+      name: m.name,
+      supportsParsing: true,
+      supportsThinking: m.supportsThinking,
+    })),
+    ...ollamaCustomModels
+      .filter((custom) => !installedOllamaModels.some((installed) => installed.id === custom.id))
+      .map((m) => ({
+        id: m.id,
+        name: m.name,
+        supportsParsing: true,
+        supportsThinking: m.supportsThinking,
+      })),
+  ]
 
   const providers = AI_PROVIDERS.map((providerConfig) => {
-    // For Ollama, use custom models from preferences
-    const models =
-      providerConfig.id === 'ollama'
-        ? ollamaCustomModels.map((m) => ({
-            id: m.id,
-            name: m.name,
-            supportsParsing: true,
-            supportsThinking: m.supportsThinking,
-          }))
-        : providerConfig.models
+    const models = providerConfig.id === 'ollama' ? ollamaModels : providerConfig.models
 
     return {
       code: providerConfig.id,
