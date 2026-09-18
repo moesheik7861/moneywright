@@ -77,7 +77,7 @@ function InvestmentsPage() {
   const [editingHolding, setEditingHolding] = useState<InvestmentHolding | null>(null)
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null)
   const [expandedSources, setExpandedSources] = useState<Set<string>>(new Set())
-  const [showInINR, setShowInINR] = useState(true)
+  const [showInZAR, setShowInZAR] = useState(true)
 
   // Query enabled when we have a profileId OR we're in family view
   const queryEnabled = !!activeProfileId || showFamilyView
@@ -99,26 +99,26 @@ function InvestmentsPage() {
     enabled: queryEnabled,
   })
 
-  // Check if we have any non-INR holdings
-  const hasMultipleCurrencies = holdings?.some((h) => h.currency !== 'INR')
+  // Check if we have any non-ZAR holdings
+  const hasMultipleCurrencies = holdings?.some((h) => h.currency !== 'ZAR')
 
   // FX rates for currency conversion
   const { data: fxRatesData, isLoading: fxRatesLoading } = useFxRates('USD', {
-    enabled: showInINR && hasMultipleCurrencies,
+    enabled: showInZAR && hasMultipleCurrencies,
   })
 
   // Build FX rates map
   const fxRates: Record<string, number> = {}
   if (fxRatesData?.success && fxRatesData.data?.rates) {
-    fxRates['USD'] = fxRatesData.data.rates.INR || 83
-    fxRates['EUR'] = (fxRatesData.data.rates.INR || 83) / (fxRatesData.data.rates.EUR || 0.92)
-    fxRates['GBP'] = (fxRatesData.data.rates.INR || 83) / (fxRatesData.data.rates.GBP || 0.79)
-    fxRates['INR'] = 1
+    fxRates['USD'] = fxRatesData.data.rates.ZAR || 83
+    fxRates['EUR'] = (fxRatesData.data.rates.ZAR || 83) / (fxRatesData.data.rates.EUR || 0.92)
+    fxRates['GBP'] = (fxRatesData.data.rates.ZAR || 83) / (fxRatesData.data.rates.GBP || 0.79)
+    fxRates['ZAR'] = 1
   }
 
-  // Local convertToINR that uses local fxRates
-  const localConvertToINR = (amount: number, currency: string): number => {
-    if (!showInINR || currency === 'INR') return amount
+  // Local convertToZAR that uses local fxRates
+  const localConvertToZAR = (amount: number, currency: string): number => {
+    if (!showInZAR || currency === 'ZAR') return amount
     const rate = fxRates[currency]
     if (rate) return amount * rate
     return amount
@@ -127,8 +127,8 @@ function InvestmentsPage() {
   // Local format functions
   const formatCurrency = (amount: number | null | undefined, currency: string): string => {
     if (amount === null || amount === undefined) return '-'
-    const displayAmount = localConvertToINR(amount, currency)
-    const displayCurrency = showInINR ? 'INR' : currency
+    const displayAmount = localConvertToZAR(amount, currency)
+    const displayCurrency = showInZAR ? 'ZAR' : currency
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: displayCurrency,
@@ -188,10 +188,10 @@ function InvestmentsPage() {
   // Calculate totals - only include holdings with valid invested value for gain calculations
   const calcTotals = holdings?.reduce(
     (acc, h) => {
-      const currentConverted = localConvertToINR(h.currentValue, h.currency)
+      const currentConverted = localConvertToZAR(h.currentValue, h.currency)
       const hasValidInvested = h.investedValue !== null && h.investedValue > 0
       const investedConverted = hasValidInvested
-        ? localConvertToINR(h.investedValue!, h.currency)
+        ? localConvertToZAR(h.investedValue!, h.currency)
         : 0
       const currentForGain = hasValidInvested ? currentConverted : 0
 
@@ -225,10 +225,10 @@ function InvestmentsPage() {
                     htmlFor="show-inr"
                     className="cursor-pointer text-sm text-muted-foreground"
                   >
-                    Show in INR
+                    Show in ZAR
                   </Label>
-                  <Switch id="show-inr" checked={showInINR} onCheckedChange={setShowInINR} />
-                  {showInINR && fxRatesLoading && (
+                  <Switch id="show-inr" checked={showInZAR} onCheckedChange={setShowInZAR} />
+                  {showInZAR && fxRatesLoading && (
                     <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                   )}
                 </div>
@@ -270,7 +270,7 @@ function InvestmentsPage() {
             totalInvested={calcTotals.totalInvested}
             totalGainLoss={totalGainLoss}
             gainLossPercent={gainLossPercent}
-            currency="INR"
+            currency="ZAR"
             isLoading={summaryLoading}
           />
         )}
@@ -403,8 +403,8 @@ function InvestmentsPage() {
                       onDeleteHolding={(id) => deleteHoldingMutation.mutate(id)}
                       formatCurrency={formatCurrency}
                       formatPercentage={formatPercentage}
-                      showInINR={showInINR}
-                      convertToINR={localConvertToINR}
+                      showInZAR={showInZAR}
+                      convertToZAR={localConvertToZAR}
                       getSourceTypeLabel={getSourceTypeLabel}
                       profiles={profiles}
                       showProfileBadge={showFamilyView}
@@ -422,8 +422,8 @@ function InvestmentsPage() {
                 holdingTypes={holdingTypes}
                 formatCurrency={formatCurrency}
                 formatPercentage={formatPercentage}
-                showInINR={showInINR}
-                convertToINR={localConvertToINR}
+                showInZAR={showInZAR}
+                convertToZAR={localConvertToZAR}
                 onEditHolding={setEditingHolding}
                 onDeleteHolding={(id) => deleteHoldingMutation.mutate(id)}
                 profiles={profiles}
