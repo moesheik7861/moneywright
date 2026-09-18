@@ -38,7 +38,7 @@ export function SourceForm({
   const [sourceName, setSourceName] = useState(source?.sourceName || '')
   const [institution, setInstitution] = useState(source?.institution || '')
   const [accountIdentifier, setAccountIdentifier] = useState(source?.accountIdentifier || '')
-  const [currency, setCurrency] = useState(source?.currency || 'INR')
+  const [currency, setCurrency] = useState(source?.currency || 'ZAR')
 
   const createMutation = useMutation({
     mutationFn: createInvestmentSource,
@@ -114,7 +114,7 @@ export function SourceForm({
         <Label htmlFor="sourceName">Name *</Label>
         <Input
           id="sourceName"
-          placeholder="e.g., My Zerodha Account"
+          placeholder="e.g., My EasyEquities Account"
           value={sourceName}
           onChange={(e) => setSourceName(e.target.value)}
           className="h-11"
@@ -126,7 +126,7 @@ export function SourceForm({
           <Label htmlFor="institution">Institution / Platform</Label>
           <Input
             id="institution"
-            placeholder="e.g., zerodha, groww"
+            placeholder="e.g., easy_equities, satrix"
             value={institution}
             onChange={(e) => setInstitution(e.target.value)}
             className="h-11"
@@ -153,7 +153,7 @@ export function SourceForm({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="INR">INR - Indian Rupee</SelectItem>
+            <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
             <SelectItem value="USD">USD - US Dollar</SelectItem>
             <SelectItem value="EUR">EUR - Euro</SelectItem>
             <SelectItem value="GBP">GBP - British Pound</SelectItem>
