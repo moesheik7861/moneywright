@@ -229,7 +229,7 @@ Determine what type of document this is:
 1. **bank_statement**: A statement from a bank showing transactions in a savings, current, or checking account.
    - Has transaction history with dates, descriptions, amounts
    - Shows running balance
-   - From banks like HDFC, ICICI, SBI, etc.
+   - From banks like Capitec, FNB, Standard Bank, Absa, Nedbank, etc.
 
 2. **credit_card_statement**: A credit card billing statement.
    - Shows card transactions, total due, minimum due
@@ -238,11 +238,11 @@ Determine what type of document this is:
 
 3. **investment_statement**: A portfolio/holdings statement showing investments.
    - Shows stocks, mutual funds, ETFs, bonds, PPF, EPF, NPS, FD holdings
-   - From brokers like Zerodha, Groww, or fund houses
+   - From platforms such as EasyEquities, Satrix, 10X and other South African investment providers
    - Has units/shares, current value, NAV
-   - CAS (Consolidated Account Statement) from CAMS/KFintech/MF Central
-   - Passbooks for PPF, EPF
-   - NPS statements
+   - South African investment statements and provider portfolio reports
+   - Pension, provident and retirement statements
+   - TFSA and South African investment statements
 
 === STEP 2: EXTRACT INFORMATION BASED ON TYPE ===
 
