@@ -10,6 +10,146 @@ export const SUPPORTED_COUNTRIES = [
   { code: 'IN', name: 'India', currency: 'INR', currencySymbol: '₹' },
   { code: 'US', name: 'United States', currency: 'USD', currencySymbol: '
 
+export type InvestmentHoldingTypeCode = (typeof INVESTMENT_HOLDING_TYPES)[number]['code']
+
+/**
+ * Investment transaction types
+ */
+export const INVESTMENT_TRANSACTION_TYPES = [
+  { code: 'buy', label: 'Buy' },
+  { code: 'sell', label: 'Sell' },
+  { code: 'dividend', label: 'Dividend' },
+  { code: 'interest', label: 'Interest' },
+  { code: 'sip', label: 'SIP' },
+  { code: 'switch_in', label: 'Switch In' },
+  { code: 'switch_out', label: 'Switch Out' },
+  { code: 'contribution', label: 'Contribution' },
+  { code: 'withdrawal', label: 'Withdrawal' },
+] as const
+
+export type InvestmentTransactionTypeCode = (typeof INVESTMENT_TRANSACTION_TYPES)[number]['code']
+
+/**
+ * Snapshot types
+ */
+export const SNAPSHOT_TYPES = ['statement_import', 'manual', 'scheduled'] as const
+export type SnapshotType = (typeof SNAPSHOT_TYPES)[number]
+
+/**
+ * Document types for statements
+ */
+export const DOCUMENT_TYPES = [
+  'bank_statement',
+  'credit_card_statement',
+  'investment_statement',
+  'payslip',
+  'receipt',
+  'tax_certificate',
+  'retirement_statement',
+  'other_financial_document',
+] as const
+export type DocumentType = (typeof DOCUMENT_TYPES)[number]
+
+/**
+ * Get investment source types for a country
+ */
+export function getInvestmentSourceTypesForCountry(countryCode: CountryCode) {
+  return INVESTMENT_SOURCE_TYPES[countryCode] || INVESTMENT_SOURCE_TYPES.US
+}
+
+// ============================================================================
+// STATEMENT & TRANSACTION TYPES
+// ============================================================================
+
+/**
+ * Statement parsing status
+ */
+export const STATEMENT_STATUS = ['pending', 'parsing', 'completed', 'failed'] as const
+export type StatementStatus = (typeof STATEMENT_STATUS)[number]
+
+/**
+ * Transaction types
+ */
+export const TRANSACTION_TYPES = ['credit', 'debit'] as const
+export type TransactionType = (typeof TRANSACTION_TYPES)[number]
+
+/**
+ * Transaction link types
+ */
+export const TRANSACTION_LINK_TYPES = ['payment', 'transfer', 'refund'] as const
+export type TransactionLinkType = (typeof TRANSACTION_LINK_TYPES)[number]
+
+/**
+ * Supported file types for statement upload
+ */
+export const SUPPORTED_FILE_TYPES = ['pdf', 'csv', 'xlsx'] as const
+export type FileType = (typeof SUPPORTED_FILE_TYPES)[number]
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Check if a country code is supported
+ */
+export function isValidCountryCode(code: string): code is CountryCode {
+  return SUPPORTED_COUNTRIES.some((c) => c.code === code)
+}
+
+/**
+ * Check if a relationship type is valid
+ */
+export function isValidRelationshipType(type: string): type is RelationshipType {
+  return RELATIONSHIP_TYPES.includes(type as RelationshipType)
+}
+
+/**
+ * Get country details by code
+ */
+export function getCountryByCode(code: CountryCode) {
+  return SUPPORTED_COUNTRIES.find((c) => c.code === code)
+}
+
+/**
+ * Get account types for a country
+ */
+export function getAccountTypesForCountry(countryCode: CountryCode) {
+  return ACCOUNT_TYPES[countryCode] || ACCOUNT_TYPES.US
+}
+
+/**
+ * Get transaction categories for a country
+ */
+export function getCategoriesForCountry(countryCode: CountryCode) {
+  return TRANSACTION_CATEGORIES[countryCode] || TRANSACTION_CATEGORIES.US
+}
+
+/**
+ * Get investment types for a country
+ */
+export function getInvestmentTypesForCountry(countryCode: CountryCode) {
+  return INVESTMENT_TYPES[countryCode] || INVESTMENT_TYPES.US
+}
+
+/**
+ * Check if account type is valid for a country
+ */
+export function isValidAccountType(countryCode: CountryCode, accountType: string): boolean {
+  const types = getAccountTypesForCountry(countryCode)
+  return types.some((t) => t.code === accountType)
+}
+
+/**
+ * Check if category is valid for a country
+ */
+export function isValidCategory(countryCode: CountryCode, category: string): boolean {
+  const categories = getCategoriesForCountry(countryCode)
+  return categories.some((c) => c.code === category)
+}
+ },
+  { code: 'ZA', name: 'South Africa', currency: 'ZAR', currencySymbol: 'R' },
+] as const
+
 export type CountryCode = (typeof SUPPORTED_COUNTRIES)[number]['code']
 
 /**
@@ -812,20 +952,6 @@ const INSTITUTIONS_US: Institution[] = [
 /**
  * All institutions by country
  */
-const INSTITUTIONS_ZA: Institution[] = [
-  { id: 'fnb', name: 'FNB', logo: '' },
-  { id: 'standard_bank', name: 'Standard Bank', logo: '' },
-  { id: 'absa', name: 'Absa', logo: '' },
-  { id: 'nedbank', name: 'Nedbank', logo: '' },
-  { id: 'capitec', name: 'Capitec Bank', logo: '' },
-  { id: 'discovery_bank', name: 'Discovery Bank', logo: '' },
-  { id: 'investec', name: 'Investec', logo: '' },
-  { id: 'tymebank', name: 'TymeBank', logo: '' },
-  { id: 'african_bank', name: 'African Bank', logo: '' },
-  { id: 'bidvest', name: 'Bidvest Bank', logo: '' },
-  { id: 'other', name: 'Other', logo: '' },
-]
-
 const INSTITUTIONS: Record<CountryCode, Institution[]> = {
   IN: INSTITUTIONS_IN,
   US: INSTITUTIONS_US,
@@ -842,23 +968,11 @@ const INSTITUTIONS: Record<CountryCode, Institution[]> = {
     { id: 'bidvest_bank', name: 'Bidvest Bank', logo: '', website: 'https://www.bidvestbank.co.za' },
     { id: 'other', name: 'Other', logo: '' },
   ],
-  ZA: INSTITUTIONS_ZA,
 }
 
 /**
  * All insurance providers by country
  */
-const INSURANCE_PROVIDERS_ZA: Institution[] = [
-  { id: 'discovery', name: 'Discovery', logo: '' },
-  { id: 'momentum', name: 'Momentum', logo: '' },
-  { id: 'sanlam', name: 'Sanlam', logo: '' },
-  { id: 'old_mutual', name: 'Old Mutual', logo: '' },
-  { id: 'liberty', name: 'Liberty', logo: '' },
-  { id: 'outsurance', name: 'OUTsurance', logo: '' },
-  { id: 'santam', name: 'Santam', logo: '' },
-  { id: 'other', name: 'Other', logo: '' },
-]
-
 const INSURANCE_PROVIDERS: Record<CountryCode, Institution[]> = {
   IN: INSURANCE_PROVIDERS_IN,
   US: INSURANCE_PROVIDERS_US,
@@ -872,7 +986,6 @@ const INSURANCE_PROVIDERS: Record<CountryCode, Institution[]> = {
     { id: 'santam', name: 'Santam', logo: '', website: 'https://www.santam.co.za' },
     { id: 'other', name: 'Other', logo: '' },
   ],
-  ZA: INSURANCE_PROVIDERS_ZA,
 }
 
 /**
@@ -956,30 +1069,6 @@ export function formatInsuranceProvidersForLLM(countryCode: CountryCode): string
  * Account types by country
  */
 export const ACCOUNT_TYPES = {
-  IN: [
-    { code: 'savings_account', label: 'Savings Account' },
-    { code: 'current_account', label: 'Current Account' },
-    { code: 'credit_card', label: 'Credit Card' },
-    { code: 'fixed_deposit', label: 'Fixed Deposit' },
-    { code: 'ppf', label: 'PPF' },
-    { code: 'epf', label: 'EPF' },
-    { code: 'nps', label: 'NPS' },
-    { code: 'demat', label: 'Demat Account' },
-    { code: 'other', label: 'Other' },
-  ],
-  ZA: [
-    { code: 'savings_account', label: 'Savings Account' },
-    { code: 'current_account', label: 'Current Account' },
-    { code: 'credit_card', label: 'Credit Card' },
-    { code: 'home_loan', label: 'Home Loan / Bond' },
-    { code: 'vehicle_finance', label: 'Vehicle Finance' },
-    { code: 'tax_free_savings', label: 'Tax-Free Savings Account' },
-    { code: 'retirement_annuity', label: 'Retirement Annuity' },
-    { code: 'pension', label: 'Pension Fund' },
-    { code: 'provident', label: 'Provident Fund' },
-    { code: 'brokerage', label: 'Brokerage Account' },
-    { code: 'other', label: 'Other' },
-  ],
   ZA: [
     { code: 'savings_account', label: 'Savings Account' },
     { code: 'current_account', label: 'Current Account' },
@@ -991,6 +1080,17 @@ export const ACCOUNT_TYPES = {
     { code: 'pension', label: 'Pension' },
     { code: 'provident', label: 'Provident Fund' },
     { code: 'brokerage', label: 'Brokerage Account' },
+    { code: 'other', label: 'Other' },
+  ],
+  IN: [
+    { code: 'savings_account', label: 'Savings Account' },
+    { code: 'current_account', label: 'Current Account' },
+    { code: 'credit_card', label: 'Credit Card' },
+    { code: 'fixed_deposit', label: 'Fixed Deposit' },
+    { code: 'ppf', label: 'PPF' },
+    { code: 'epf', label: 'EPF' },
+    { code: 'nps', label: 'NPS' },
+    { code: 'demat', label: 'Demat Account' },
     { code: 'other', label: 'Other' },
   ],
   US: [
@@ -1015,6 +1115,30 @@ export type AccountTypeCode = (typeof ACCOUNT_TYPES)[CountryCode][number]['code'
  * Transaction categories by country
  */
 export const TRANSACTION_CATEGORIES = {
+  ZA: [
+    { code: 'food_dining', label: 'Food & Dining', color: 'orange' },
+    { code: 'groceries', label: 'Groceries', color: 'lime' },
+    { code: 'transport', label: 'Transport', color: 'sky' },
+    { code: 'fuel', label: 'Fuel', color: 'amber' },
+    { code: 'housing', label: 'Housing / Bond / Rent', color: 'purple' },
+    { code: 'utilities', label: 'Utilities', color: 'cyan' },
+    { code: 'mobile_internet', label: 'Mobile & Internet', color: 'cyan' },
+    { code: 'insurance', label: 'Insurance', color: 'slate' },
+    { code: 'healthcare', label: 'Healthcare', color: 'red' },
+    { code: 'education', label: 'Education', color: 'indigo' },
+    { code: 'entertainment', label: 'Entertainment', color: 'pink' },
+    { code: 'shopping', label: 'Shopping', color: 'blue' },
+    { code: 'bank_charges', label: 'Bank Charges / Fees', color: 'rose' },
+    { code: 'tax_sars', label: 'Tax / SARS', color: 'red' },
+    { code: 'salary_income', label: 'Salary / Income', color: 'emerald' },
+    { code: 'freelance_income', label: 'Freelance / Business Income', color: 'emerald' },
+    { code: 'interest', label: 'Interest', color: 'emerald' },
+    { code: 'dividend', label: 'Dividend', color: 'emerald' },
+    { code: 'investment', label: 'Investment', color: 'amber' },
+    { code: 'transfer', label: 'Transfer', color: 'sky' },
+    { code: 'charity', label: 'Charity / Donations', color: 'teal' },
+    { code: 'other', label: 'Other', color: 'zinc' },
+  ],
   IN: [
     { code: 'food_dining', label: 'Food & Dining', color: 'orange' },
     { code: 'groceries', label: 'Groceries', color: 'lime' },
@@ -1046,54 +1170,6 @@ export const TRANSACTION_CATEGORIES = {
     { code: 'credit_card_payment', label: 'Credit Card Payment', color: 'sky' },
     { code: 'bank_charges', label: 'Bank Charges / Fees', color: 'rose' },
     { code: 'forex', label: 'Foreign Exchange', color: 'indigo' },
-    { code: 'other', label: 'Other', color: 'zinc' },
-  ],
-  ZA: [
-    { code: 'food_dining', label: 'Food & Dining', color: 'orange' },
-    { code: 'groceries', label: 'Groceries', color: 'lime' },
-    { code: 'transport', label: 'Transport', color: 'sky' },
-    { code: 'fuel', label: 'Fuel', color: 'amber' },
-    { code: 'housing', label: 'Housing / Bond / Rent', color: 'purple' },
-    { code: 'utilities', label: 'Utilities', color: 'cyan' },
-    { code: 'mobile_internet', label: 'Mobile & Internet', color: 'cyan' },
-    { code: 'insurance', label: 'Insurance', color: 'slate' },
-    { code: 'healthcare', label: 'Healthcare', color: 'red' },
-    { code: 'education', label: 'Education', color: 'indigo' },
-    { code: 'entertainment', label: 'Entertainment', color: 'pink' },
-    { code: 'shopping', label: 'Shopping', color: 'blue' },
-    { code: 'bank_charges', label: 'Bank Charges / Fees', color: 'rose' },
-    { code: 'tax', label: 'Tax / SARS', color: 'red' },
-    { code: 'salary', label: 'Salary / Income', color: 'emerald' },
-    { code: 'freelance_income', label: 'Freelance / Business Income', color: 'emerald' },
-    { code: 'interest', label: 'Interest', color: 'emerald' },
-    { code: 'dividend', label: 'Dividend', color: 'emerald' },
-    { code: 'investment', label: 'Investment', color: 'amber' },
-    { code: 'transfer', label: 'Transfer', color: 'sky' },
-    { code: 'charity', label: 'Charity / Donations', color: 'teal' },
-    { code: 'other', label: 'Other', color: 'zinc' },
-  ],
-  ZA: [
-    { code: 'food_dining', label: 'Food & Dining', color: 'orange' },
-    { code: 'groceries', label: 'Groceries', color: 'lime' },
-    { code: 'transport', label: 'Transport', color: 'sky' },
-    { code: 'fuel', label: 'Fuel', color: 'amber' },
-    { code: 'housing', label: 'Housing / Bond / Rent', color: 'purple' },
-    { code: 'utilities', label: 'Utilities', color: 'cyan' },
-    { code: 'mobile_internet', label: 'Mobile & Internet', color: 'cyan' },
-    { code: 'insurance', label: 'Insurance', color: 'slate' },
-    { code: 'healthcare', label: 'Healthcare', color: 'red' },
-    { code: 'education', label: 'Education', color: 'indigo' },
-    { code: 'entertainment', label: 'Entertainment', color: 'pink' },
-    { code: 'shopping', label: 'Shopping', color: 'blue' },
-    { code: 'bank_charges', label: 'Bank Charges / Fees', color: 'rose' },
-    { code: 'tax_sars', label: 'Tax / SARS', color: 'red' },
-    { code: 'salary_income', label: 'Salary / Income', color: 'emerald' },
-    { code: 'freelance_income', label: 'Freelance / Business Income', color: 'emerald' },
-    { code: 'interest', label: 'Interest', color: 'emerald' },
-    { code: 'dividend', label: 'Dividend', color: 'emerald' },
-    { code: 'investment', label: 'Investment', color: 'amber' },
-    { code: 'transfer', label: 'Transfer', color: 'sky' },
-    { code: 'charity', label: 'Charity / Donations', color: 'teal' },
     { code: 'other', label: 'Other', color: 'zinc' },
   ],
   US: [
@@ -1154,20 +1230,6 @@ export const INVESTMENT_TYPES = {
     { code: 'real_estate', label: 'Real Estate' },
     { code: 'other', label: 'Other' },
   ],
-  ZA: [
-    { code: 'etf', label: 'ETF' },
-    { code: 'stocks', label: 'Shares' },
-    { code: 'tax_free_savings', label: 'Tax-Free Savings' },
-    { code: 'retirement_annuity', label: 'Retirement Annuity' },
-    { code: 'pension', label: 'Pension Fund' },
-    { code: 'provident', label: 'Provident Fund' },
-    { code: 'unit_trust', label: 'Unit Trust' },
-    { code: 'bonds', label: 'Bonds' },
-    { code: 'property', label: 'Property' },
-    { code: 'gold', label: 'Gold' },
-    { code: 'crypto', label: 'Cryptocurrency' },
-    { code: 'other', label: 'Other' },
-  ],
   US: [
     { code: 'mutual_fund', label: 'Mutual Fund' },
     { code: 'etf', label: 'ETF' },
@@ -1187,6 +1249,22 @@ export type InvestmentTypeCode = (typeof INVESTMENT_TYPES)[CountryCode][number][
  * Investment source types - platforms/providers where investments are held
  */
 export const INVESTMENT_SOURCE_TYPES = {
+  ZA: [
+    { code: 'easy_equities', label: 'EasyEquities', logo: '' },
+    { code: 'satrix', label: 'Satrix', logo: '' },
+    { code: 'sygnia', label: 'Sygnia', logo: '' },
+    { code: 'tenx', label: '10X Investments', logo: '' },
+    { code: 'ninety_one', label: 'Ninety One', logo: '' },
+    { code: 'old_mutual', label: 'Old Mutual', logo: '' },
+    { code: 'sanlam', label: 'Sanlam', logo: '' },
+    { code: 'standard_bank', label: 'Standard Bank', logo: '' },
+    { code: 'fnb_securities', label: 'FNB Securities', logo: '' },
+    { code: 'interactive_brokers', label: 'Interactive Brokers', logo: '' },
+    { code: 'luno', label: 'Luno', logo: '' },
+    { code: 'valr', label: 'VALR', logo: '' },
+    { code: 'manual', label: 'Manual Entry', logo: '' },
+    { code: 'other', label: 'Other', logo: '' },
+  ],
   IN: [
     // Domestic brokers
     { code: 'zerodha', label: 'Zerodha', logo: '/institutions/in/zerodha.svg' },
@@ -1209,38 +1287,6 @@ export const INVESTMENT_SOURCE_TYPES = {
     { code: 'nps', label: 'NPS', logo: '' },
     { code: 'fd', label: 'Fixed Deposit', logo: '' },
     // Manual/other
-    { code: 'manual', label: 'Manual Entry', logo: '' },
-    { code: 'other', label: 'Other', logo: '' },
-  ],
-  ZA: [
-    { code: 'easyequities', label: 'EasyEquities', logo: '' },
-    { code: 'satrix', label: 'Satrix', logo: '' },
-    { code: 'sygnia', label: 'Sygnia', logo: '' },
-    { code: '10x', label: '10X Investments', logo: '' },
-    { code: 'ninety_one', label: 'Ninety One', logo: '' },
-    { code: 'old_mutual', label: 'Old Mutual', logo: '' },
-    { code: 'sanlam', label: 'Sanlam', logo: '' },
-    { code: 'standard_bank', label: 'Standard Bank', logo: '' },
-    { code: 'fnb', label: 'FNB Securities', logo: '' },
-    { code: 'interactive_brokers', label: 'Interactive Brokers', logo: '' },
-    { code: 'luno', label: 'Luno', logo: '' },
-    { code: 'valr', label: 'VALR', logo: '' },
-    { code: 'manual', label: 'Manual Entry', logo: '' },
-    { code: 'other', label: 'Other', logo: '' },
-  ],
-  ZA: [
-    { code: 'easy_equities', label: 'EasyEquities', logo: '' },
-    { code: 'satrix', label: 'Satrix', logo: '' },
-    { code: 'sygnia', label: 'Sygnia', logo: '' },
-    { code: 'tenx', label: '10X Investments', logo: '' },
-    { code: 'ninety_one', label: 'Ninety One', logo: '' },
-    { code: 'old_mutual', label: 'Old Mutual', logo: '' },
-    { code: 'sanlam', label: 'Sanlam', logo: '' },
-    { code: 'standard_bank', label: 'Standard Bank', logo: '' },
-    { code: 'fnb_securities', label: 'FNB Securities', logo: '' },
-    { code: 'interactive_brokers', label: 'Interactive Brokers', logo: '' },
-    { code: 'luno', label: 'Luno', logo: '' },
-    { code: 'valr', label: 'VALR', logo: '' },
     { code: 'manual', label: 'Manual Entry', logo: '' },
     { code: 'other', label: 'Other', logo: '' },
   ],
@@ -1279,6 +1325,146 @@ export const INVESTMENT_HOLDING_TYPES = [
   { code: 'gold', label: 'Gold' },
   { code: 'reit', label: 'REIT' },
   { code: 'other', label: 'Other' },
+] as const
+
+export type InvestmentHoldingTypeCode = (typeof INVESTMENT_HOLDING_TYPES)[number]['code']
+
+/**
+ * Investment transaction types
+ */
+export const INVESTMENT_TRANSACTION_TYPES = [
+  { code: 'buy', label: 'Buy' },
+  { code: 'sell', label: 'Sell' },
+  { code: 'dividend', label: 'Dividend' },
+  { code: 'interest', label: 'Interest' },
+  { code: 'sip', label: 'SIP' },
+  { code: 'switch_in', label: 'Switch In' },
+  { code: 'switch_out', label: 'Switch Out' },
+  { code: 'contribution', label: 'Contribution' },
+  { code: 'withdrawal', label: 'Withdrawal' },
+] as const
+
+export type InvestmentTransactionTypeCode = (typeof INVESTMENT_TRANSACTION_TYPES)[number]['code']
+
+/**
+ * Snapshot types
+ */
+export const SNAPSHOT_TYPES = ['statement_import', 'manual', 'scheduled'] as const
+export type SnapshotType = (typeof SNAPSHOT_TYPES)[number]
+
+/**
+ * Document types for statements
+ */
+export const DOCUMENT_TYPES = [
+  'bank_statement',
+  'credit_card_statement',
+  'investment_statement',
+  'payslip',
+  'receipt',
+  'tax_certificate',
+  'retirement_statement',
+  'other_financial_document',
+] as const
+export type DocumentType = (typeof DOCUMENT_TYPES)[number]
+
+/**
+ * Get investment source types for a country
+ */
+export function getInvestmentSourceTypesForCountry(countryCode: CountryCode) {
+  return INVESTMENT_SOURCE_TYPES[countryCode] || INVESTMENT_SOURCE_TYPES.US
+}
+
+// ============================================================================
+// STATEMENT & TRANSACTION TYPES
+// ============================================================================
+
+/**
+ * Statement parsing status
+ */
+export const STATEMENT_STATUS = ['pending', 'parsing', 'completed', 'failed'] as const
+export type StatementStatus = (typeof STATEMENT_STATUS)[number]
+
+/**
+ * Transaction types
+ */
+export const TRANSACTION_TYPES = ['credit', 'debit'] as const
+export type TransactionType = (typeof TRANSACTION_TYPES)[number]
+
+/**
+ * Transaction link types
+ */
+export const TRANSACTION_LINK_TYPES = ['payment', 'transfer', 'refund'] as const
+export type TransactionLinkType = (typeof TRANSACTION_LINK_TYPES)[number]
+
+/**
+ * Supported file types for statement upload
+ */
+export const SUPPORTED_FILE_TYPES = ['pdf', 'csv', 'xlsx'] as const
+export type FileType = (typeof SUPPORTED_FILE_TYPES)[number]
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Check if a country code is supported
+ */
+export function isValidCountryCode(code: string): code is CountryCode {
+  return SUPPORTED_COUNTRIES.some((c) => c.code === code)
+}
+
+/**
+ * Check if a relationship type is valid
+ */
+export function isValidRelationshipType(type: string): type is RelationshipType {
+  return RELATIONSHIP_TYPES.includes(type as RelationshipType)
+}
+
+/**
+ * Get country details by code
+ */
+export function getCountryByCode(code: CountryCode) {
+  return SUPPORTED_COUNTRIES.find((c) => c.code === code)
+}
+
+/**
+ * Get account types for a country
+ */
+export function getAccountTypesForCountry(countryCode: CountryCode) {
+  return ACCOUNT_TYPES[countryCode] || ACCOUNT_TYPES.US
+}
+
+/**
+ * Get transaction categories for a country
+ */
+export function getCategoriesForCountry(countryCode: CountryCode) {
+  return TRANSACTION_CATEGORIES[countryCode] || TRANSACTION_CATEGORIES.US
+}
+
+/**
+ * Get investment types for a country
+ */
+export function getInvestmentTypesForCountry(countryCode: CountryCode) {
+  return INVESTMENT_TYPES[countryCode] || INVESTMENT_TYPES.US
+}
+
+/**
+ * Check if account type is valid for a country
+ */
+export function isValidAccountType(countryCode: CountryCode, accountType: string): boolean {
+  const types = getAccountTypesForCountry(countryCode)
+  return types.some((t) => t.code === accountType)
+}
+
+/**
+ * Check if category is valid for a country
+ */
+export function isValidCategory(countryCode: CountryCode, category: string): boolean {
+  const categories = getCategoriesForCountry(countryCode)
+  return categories.some((c) => c.code === category)
+}
+ },
+  { code: 'ZA', name: 'South Africa', currency: 'ZAR', currencySymbol: 'R' },
 ] as const
 
 export type InvestmentHoldingTypeCode = (typeof INVESTMENT_HOLDING_TYPES)[number]['code']
