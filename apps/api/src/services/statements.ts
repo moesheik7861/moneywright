@@ -1,4 +1,4 @@
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, inArray } from 'drizzle-orm'
 import { db, tables, dbType } from '../db'
 import type { Statement } from '../db'
 import { logger } from '../lib/logger'
@@ -550,6 +550,64 @@ async function processStatements(
   }
 
   categorizationStatus = { active: false, type: null }
+}
+
+/**
+ * Recover statement jobs after an API restart.
+ * Text-extracted documents can safely resume processing. Image-only documents
+ * remain pending AI/OCR rather than being lost.
+ */
+export async function recoverPendingStatements(): Promise<void> {
+  try {
+    const pending = await db
+      .select({
+        id: tables.statements.id,
+        profileId: tables.statements.profileId,
+        userId: tables.statements.userId,
+        documentType: tables.statements.documentType,
+        fileType: tables.statements.fileType,
+        rawText: tables.statements.rawText,
+      })
+      .from(tables.statements)
+      .where(inArray(tables.statements.status, ['pending', 'parsing']))
+
+    for (const statement of pending) {
+      if (!statement.rawText?.trim()) {
+        await updateStatementStatus(
+          statement.id,
+          'pending_ai',
+          'Document retained. OCR/AI extraction is required.'
+        )
+        continue
+      }
+
+      const [user] = await db
+        .select({ country: tables.users.country })
+        .from(tables.users)
+        .where(eq(tables.users.id, statement.userId))
+        .limit(1)
+
+      if (!user?.country) continue
+
+      queueStatements({
+        statements: [{
+          statementId: statement.id,
+          profileId: statement.profileId,
+          userId: statement.userId,
+          pages: [statement.rawText],
+          fileType: statement.fileType as FileType,
+          documentType: statement.documentType as 'bank_statement' | 'investment_statement',
+        }],
+        countryCode: user.country as CountryCode,
+      })
+    }
+
+    if (pending.length > 0) {
+      logger.debug(`[Statement] Recovered ${pending.length} pending statement job(s)`)
+    }
+  } catch (error) {
+    logger.error('[Statement] Failed to recover pending statements:', error)
+  }
 }
 
 // ============================================================================
