@@ -188,6 +188,11 @@ export const statements = sqliteTable(
     originalFilename: text('original_filename').notNull(),
     fileType: text('file_type').notNull(), // pdf, csv, xlsx
     fileSizeBytes: integer('file_size_bytes'),
+    // Original document and extraction metadata. The source file is retained even when parsing fails.
+    documentPath: text('document_path'),
+    rawText: text('raw_text'),
+    extractionAttempts: integer('extraction_attempts').notNull().default(0),
+    extractionProvider: text('extraction_provider'),
 
     // Statement period
     periodStart: text('period_start'), // ISO date string
