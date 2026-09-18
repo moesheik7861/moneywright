@@ -712,6 +712,17 @@ export interface StatementsUploadResponse {
 }
 
 /**
+ * Retry extraction for a retained statement.
+ */
+export async function retryStatement(
+  statementId: string,
+  options?: { parsingModel?: string; categorizationModel?: string }
+): Promise<{ status: string; message: string }> {
+  const response = await api.post(`/statements/${statementId}/retry`, options || {})
+  return response.data
+}
+
+/**
  * Upload one or more statements
  */
 export async function uploadStatements(
