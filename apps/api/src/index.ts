@@ -28,7 +28,7 @@ import userRoutes from './routes/user'
 import profileRoutes from './routes/profiles'
 import accountRoutes from './routes/accounts'
 import statementRoutes from './routes/statements'
-import { recoverPendingStatements } from './services/statements'
+import { recoverPendingStatements, repairInvalidCapitecImports } from './services/statements'
 import transactionRoutes from './routes/transactions'
 import categoryRoutes from './routes/categories'
 import investmentRoutes from './routes/investments'
@@ -147,7 +147,7 @@ app.route('/api/insurance', insuranceRoutes)
 app.route('/api/loans', loanRoutes)
 
 // Recover uploads that were queued or parsing when the API last stopped.
-void recoverPendingStatements()
+void repairInvalidCapitecImports().then(() => recoverPendingStatements())
 
 // Static file serving for SPA (non-development mode)
 // In development, Vite dev server handles this
