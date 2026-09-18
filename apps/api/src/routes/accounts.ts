@@ -67,7 +67,7 @@ accountRoutes.get('/types', async (c) => {
     return c.json({ error: 'not_found', message: 'User not found' }, 404)
   }
 
-  const countryCode = (user.country || 'US') as CountryCode
+  const countryCode = (user.country || 'ZA') as CountryCode
   const accountTypes = getAccountTypesForCountry(countryCode)
 
   return c.json({ accountTypes })
