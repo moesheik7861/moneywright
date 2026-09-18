@@ -163,7 +163,7 @@ function initDatabase() {
     for (const [name, definition] of documentColumns) {
       if (!existingColumns.has(name)) {
         sqlite.run(`ALTER TABLE statements ADD COLUMN ${name} ${definition}`)
-        logger.debug(\`[DB] Added missing statements.\${name} column\`)
+        logger.debug(`[DB] Added missing statements.${name} column`)
       }
     }
 
