@@ -81,7 +81,7 @@ function PinUnlockPage() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="to Moneywright"
+      subtitle="to Nexus Financial Management"
       description="Track your bank accounts, investments, loans, and insurance — all in one place, powered by AI."
       features={[
         {
