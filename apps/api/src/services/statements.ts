@@ -564,6 +564,7 @@ export async function recoverPendingStatements(): Promise<void> {
         id: tables.statements.id,
         profileId: tables.statements.profileId,
         userId: tables.statements.userId,
+        status: tables.statements.status,
         documentType: tables.statements.documentType,
         fileType: tables.statements.fileType,
         rawText: tables.statements.rawText,
@@ -587,8 +588,6 @@ export async function recoverPendingStatements(): Promise<void> {
         .where(eq(tables.users.id, statement.userId))
         .limit(1)
 
-      if (!user?.country) continue
-
       // A pending-AI document can be retried automatically when we now have
       // a deterministic parser for its stored text. Unknown formats remain
       // pending AI so we never burn through AI retries on every API restart.
@@ -597,6 +596,20 @@ export async function recoverPendingStatements(): Promise<void> {
         /c\s*a\s*p\s*i\s*t\s*e\s*c/i.test(statement.rawText)
 
       if (statement.status === 'pending_ai' && !canRetryLocally) {
+        logger.debug(
+          `[Statement] Skipping AI-pending statement ${statement.id}: no deterministic local parser`
+        )
+        continue
+      }
+
+      // Capitec documents are unambiguously ZAR/South African for the
+      // deterministic local parser, so they can recover even if the user
+      // country was not persisted correctly during an earlier onboarding run.
+      const effectiveCountry = user?.country || (canRetryLocally ? 'ZA' : null)
+      if (!effectiveCountry) {
+        logger.warn(
+          `[Statement] Cannot recover ${statement.id}: user country is not set`
+        )
         continue
       }
 
@@ -609,7 +622,7 @@ export async function recoverPendingStatements(): Promise<void> {
           fileType: statement.fileType as FileType,
           documentType: statement.documentType as 'bank_statement' | 'investment_statement',
         }],
-        countryCode: user.country as CountryCode,
+        countryCode: effectiveCountry as CountryCode,
       })
     }
 
