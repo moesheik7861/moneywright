@@ -55,24 +55,24 @@ export interface CapitecLocalParseResult {
 }
 
 export function looksLikeCapitecStatement(text: string): boolean {
-  return (
-    /capitec\s+bank\s+limited/i.test(text) &&
-    /(?:statement information|transaction history|account(?: number)?)/i.test(text)
-  )
+  return /capitec(?:\s+bank)?(?:\s+limited)?/i.test(text)
 }
 
 export function parseCapitecStatement(text: string): CapitecLocalParseResult | null {
   if (!looksLikeCapitecStatement(text)) return null
 
   const accountNumber = extractTextValue(text, [
-    /\bAccount\s+Number\s*:\s*([0-9]{6,20})/i,
-    /\bAccount\s*[:\s]+([0-9]{6,20})/i,
+    /\bAccount(?:\s+Number)?\s*:\s*([0-9]{6,20})/i,
+    /\bAccount(?:\s+Number)?\s+([0-9]{6,20})/i,
+    /\bAccount(?:\s+Number)?\s*[:\s]*\n?\s*([0-9]{6,20})/i,
   ])
   const fromDate = extractTextValue(text, [
     /\bFrom\s+Date\s*:\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /\bFrom\s+Date\s*:\s*\n?\s*(\d{2}\/\d{2}\/\d{4})/i,
   ])
   const toDate = extractTextValue(text, [
     /\bTo\s+Date\s*:\s*(\d{2}\/\d{2}\/\d{4})/i,
+    /\bTo\s+Date\s*:\s*\n?\s*(\d{2}\/\d{2}\/\d{4})/i,
   ])
   const opening = firstMatch(
     text,
