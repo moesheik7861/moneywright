@@ -47,7 +47,7 @@ export function HoldingForm({
   const [currentPrice, setCurrentPrice] = useState(holding?.currentPrice?.toString() || '')
   const [currentValue, setCurrentValue] = useState(holding?.currentValue?.toString() || '')
   const [investedValue, setInvestedValue] = useState(holding?.investedValue?.toString() || '')
-  const [currency, setCurrency] = useState(holding?.currency || source?.currency || 'INR')
+  const [currency, setCurrency] = useState(holding?.currency || source?.currency || 'ZAR')
   const [asOfDate, setAsOfDate] = useState(
     holding?.asOfDate || new Date().toISOString().split('T')[0]
   )
@@ -164,7 +164,7 @@ export function HoldingForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="INR">INR</SelectItem>
+              <SelectItem value="ZAR">ZAR</SelectItem>
               <SelectItem value="USD">USD</SelectItem>
               <SelectItem value="EUR">EUR</SelectItem>
               <SelectItem value="GBP">GBP</SelectItem>
@@ -177,7 +177,7 @@ export function HoldingForm({
         <Label htmlFor="name">Name / Scheme *</Label>
         <Input
           id="name"
-          placeholder="e.g., HDFC Top 100 Fund, Reliance Industries"
+          placeholder="e.g., Satrix ETF, JSE share"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="h-11"
@@ -189,7 +189,7 @@ export function HoldingForm({
           <Label htmlFor="symbol">Symbol / Ticker</Label>
           <Input
             id="symbol"
-            placeholder="e.g., RELIANCE, INFY"
+            placeholder="e.g., STX500, JSE"
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
             className="h-11"
@@ -200,7 +200,7 @@ export function HoldingForm({
           <Label htmlFor="isin">ISIN</Label>
           <Input
             id="isin"
-            placeholder="e.g., INE002A01018"
+            placeholder="e.g., ZAE000000000"
             value={isin}
             onChange={(e) => setIsin(e.target.value)}
             className="h-11"
