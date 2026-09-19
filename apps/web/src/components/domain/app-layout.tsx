@@ -27,7 +27,7 @@ export function AppLayout({ children, title, description, hideHeader }: AppLayou
             </div>
           </header>
         )}
-        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-8">{children}</main>
+        <main className="min-w-0 w-full flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )
