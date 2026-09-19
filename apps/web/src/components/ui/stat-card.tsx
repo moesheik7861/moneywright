@@ -6,6 +6,8 @@ import { ArrowUpRight, ArrowDownRight, type LucideIcon } from 'lucide-react'
 
 // Format currency using South African defaults with generic fallbacks.
 function getCurrencyLocale(currency: string): string {
+  // South Africa build: all financial displays use ZAR.
+  currency = 'ZAR'
   switch (currency.toUpperCase()) {
     case 'ZAR':
       return 'en-ZA'
@@ -21,6 +23,8 @@ function getCurrencyLocale(currency: string): string {
 }
 
 function getCurrencySymbol(currency: string): string {
+  // South Africa build: never render INR/₹.
+  currency = 'ZAR'
   switch (currency.toUpperCase()) {
     case 'ZAR':
       return 'R'
