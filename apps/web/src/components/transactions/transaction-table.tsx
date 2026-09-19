@@ -106,45 +106,39 @@ export function TransactionTable({
 
   return (
     <div className="rounded-xl overflow-hidden border border-border-subtle bg-card">
+      <div className="border-b border-border-subtle bg-surface-elevated px-5 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">Transaction Journal</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Log every income & expense. Imported transactions are shown here in ledger format.
+            </p>
+          </div>
+          <div className="text-xs text-muted-foreground whitespace-nowrap">
+            South Africa · ZAR
+          </div>
+        </div>
+      </div>
+
       <div className="overflow-x-auto">
-        <Table className="min-w-[980px]">
+        <Table className="min-w-[1900px]">
           <TableHeader>
             <TableRow className="bg-surface-elevated hover:bg-surface-elevated border-b border-border-subtle">
-              <TableHead className="w-28">
-                <button
-                  onClick={() => handleSort('date')}
-                  className={cn(
-                    'flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider transition-colors',
-                    sortBy === 'date' ? 'text-foreground' : 'text-muted-foreground'
-                  )}
-                >
-                  Date <SortIndicator column="date" sortBy={sortBy} sortOrder={sortOrder} />
-                </button>
-              </TableHead>
-              <TableHead className="min-w-[300px] text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Description
-              </TableHead>
-              <TableHead className="w-44 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Category
-              </TableHead>
-              <TableHead className="w-44 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Account
-              </TableHead>
-              <TableHead className="w-28 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Type
-              </TableHead>
-              <TableHead className="w-40 text-right">
-                <button
-                  onClick={() => handleSort('amount')}
-                  className={cn(
-                    'ml-auto flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider transition-colors',
-                    sortBy === 'amount' ? 'text-foreground' : 'text-muted-foreground'
-                  )}
-                >
-                  Amount <SortIndicator column="amount" sortBy={sortBy} sortOrder={sortOrder} />
-                </button>
-              </TableHead>
-              <TableHead className="w-10" />
+              <TableHead className="w-28">Date</TableHead>
+              <TableHead className="w-28">Type</TableHead>
+              <TableHead className="w-48">Category</TableHead>
+              <TableHead className="w-48">Account</TableHead>
+              <TableHead className="w-32 text-right">Amount</TableHead>
+              <TableHead className="min-w-[360px]">Description</TableHead>
+              <TableHead className="w-24">Tax?</TableHead>
+              <TableHead className="w-24">Month</TableHead>
+              <TableHead className="w-20">Year</TableHead>
+              <TableHead className="w-28">Recurring?</TableHead>
+              <TableHead className="w-28">Source</TableHead>
+              <TableHead className="w-28 text-right">Units (kWh)</TableHead>
+              <TableHead className="w-28 text-right">VAT (R)</TableHead>
+              <TableHead className="w-36 text-right">Other charges (R)</TableHead>
+              <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
 
@@ -155,8 +149,12 @@ export function TransactionTable({
               const last4 = accountNumber ? accountNumber.slice(-4) : '----'
               const institutionId = account?.institution || ''
               const logoPath = institutionId
-                ? `/institutions/${countryCode}/${institutionId}.svg`
+                ? `/institutions/za/${institutionId}.svg`
                 : null
+              const date = new Date(txn.date)
+              const month = date.toLocaleDateString('en-ZA', { year: 'numeric', month: '2-digit' })
+              const year = date.getFullYear()
+              const typeLabel = txn.type === 'credit' ? 'Income' : 'Expense'
 
               return (
                 <TableRow
@@ -164,74 +162,42 @@ export function TransactionTable({
                   className="group border-b border-border-subtle last:border-b-0 hover:bg-surface-hover transition-colors"
                   style={{ animationDelay: `${Math.min(index * 15, 180)}ms` }}
                 >
-                  <TableCell className="whitespace-nowrap py-4 text-sm text-muted-foreground">
-                    {new Date(txn.date).toLocaleDateString('en-ZA', {
-                      day: '2-digit',
-                      month: 'short',
+                  <TableCell className="whitespace-nowrap py-3 text-sm text-foreground">
+                    {date.toLocaleDateString('en-ZA', {
                       year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
                     })}
                   </TableCell>
 
-                  <TableCell className="py-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-surface-elevated border-border-subtle">
-                        {txn.type === 'credit' ? (
-                          <ArrowDownLeft className="h-4 w-4 text-positive" />
-                        ) : (
-                          <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate font-medium text-foreground text-sm">
-                            {txn.summary || txn.originalDescription}
-                          </p>
-                          {txn.isSubscription && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-100 border border-violet-200 dark:bg-violet-500/10 dark:border-violet-500/20">
-                                  <RefreshCw className="h-2.5 w-2.5 text-violet-600 dark:text-violet-400" />
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">
-                                Recurring transaction
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-                        {txn.summary && txn.summary !== txn.originalDescription && (
-                          <p className="mt-1 truncate text-xs text-muted-foreground">
-                            Bank description: {txn.originalDescription}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                  <TableCell className="py-3">
+                    <span className={cn(
+                      'inline-flex rounded-md border px-2 py-1 text-xs font-medium',
+                      txn.type === 'credit'
+                        ? 'border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
+                        : 'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-500/20 dark:bg-zinc-500/10 dark:text-zinc-400'
+                    )}>
+                      {typeLabel}
+                    </span>
                   </TableCell>
 
-                  <TableCell className="py-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={cn(
-                          'inline-flex max-w-[180px] items-center rounded-md border px-2 py-1 text-xs font-medium',
-                          getCategoryColor(txn.category)
-                        )}
-                        title={
-                          txn.categoryConfidence != null
-                            ? `Categorization confidence: ${Math.round(txn.categoryConfidence * 100)}%`
-                            : undefined
-                        }
-                      >
-                        <span className="truncate">{getCategoryLabel(txn.category)}</span>
-                      </span>
-                      {txn.isManuallyCategorized && (
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                          Manual
-                        </span>
+                  <TableCell className="py-3">
+                    <span
+                      className={cn(
+                        'inline-flex max-w-[190px] items-center rounded-md border px-2 py-1 text-xs font-medium',
+                        getCategoryColor(txn.category)
                       )}
-                    </div>
+                      title={
+                        txn.categoryConfidence != null
+                          ? `Categorization confidence: ${Math.round(txn.categoryConfidence * 100)}%`
+                          : undefined
+                      }
+                    >
+                      <span className="truncate">{getCategoryLabel(txn.category)}</span>
+                    </span>
                   </TableCell>
 
-                  <TableCell className="py-4">
+                  <TableCell className="py-3">
                     <AccountLogo
                       logoPath={logoPath}
                       institutionId={institutionId || 'bank'}
@@ -245,36 +211,40 @@ export function TransactionTable({
                     />
                   </TableCell>
 
-                  <TableCell className="py-4">
-                    <div
-                      className={cn(
-                        'inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium',
-                        txn.type === 'credit'
-                          ? 'border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400'
-                          : 'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-zinc-500/20 dark:bg-zinc-500/10 dark:text-zinc-400'
-                      )}
-                    >
-                      {txn.type === 'credit' ? (
-                        <ArrowDownLeft className="h-3.5 w-3.5" />
-                      ) : (
-                        <ArrowUpRight className="h-3.5 w-3.5" />
-                      )}
-                      {txn.type === 'credit' ? 'Credit' : 'Debit'}
-                    </div>
-                  </TableCell>
-
-                  <TableCell className="py-4 text-right whitespace-nowrap">
-                    <span
-                      className={cn(
-                        'font-semibold tabular-nums text-sm',
-                        txn.type === 'credit' ? 'text-positive' : 'text-foreground'
-                      )}
-                    >
-                      {txn.type === 'credit' ? '+' : '-'}{formatAmount(txn.amount, txn.currency)}
+                  <TableCell className="py-3 text-right whitespace-nowrap">
+                    <span className={cn(
+                      'font-semibold tabular-nums text-sm',
+                      txn.type === 'credit' ? 'text-positive' : 'text-foreground'
+                    )}>
+                      {txn.type === 'credit' ? '+' : '-'}{formatAmount(txn.amount, 'ZAR')}
                     </span>
                   </TableCell>
 
-                  <TableCell className="py-4">
+                  <TableCell className="py-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-foreground text-sm" title={txn.summary || txn.originalDescription}>
+                        {txn.summary || txn.originalDescription}
+                      </p>
+                      {txn.summary && txn.summary !== txn.originalDescription && (
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                          Bank description: {txn.originalDescription}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+
+                  <TableCell className="py-3 text-xs text-muted-foreground">No</TableCell>
+                  <TableCell className="py-3 text-xs text-muted-foreground">{month}</TableCell>
+                  <TableCell className="py-3 text-xs text-muted-foreground">{year}</TableCell>
+                  <TableCell className="py-3 text-xs text-muted-foreground">
+                    {txn.isSubscription ? 'Yes' : 'No'}
+                  </TableCell>
+                  <TableCell className="py-3 text-xs text-muted-foreground">Statement</TableCell>
+                  <TableCell className="py-3 text-right text-xs text-muted-foreground">—</TableCell>
+                  <TableCell className="py-3 text-right text-xs text-muted-foreground">—</TableCell>
+                  <TableCell className="py-3 text-right text-xs text-muted-foreground">—</TableCell>
+
+                  <TableCell className="py-3">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -293,6 +263,7 @@ export function TransactionTable({
       </div>
     </div>
   )
+
 }
 
 function AccountLogo({
