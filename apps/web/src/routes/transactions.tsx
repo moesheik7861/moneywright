@@ -191,7 +191,7 @@ function TransactionsPage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Page Header */}
         <PageHeader
           title="Transactions"
@@ -269,17 +269,6 @@ function TransactionsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Pagination - Always visible */}
-        {!transactionsLoading && transactions.length > 0 && (
-          <Pagination
-            page={page}
-            totalPages={totalPages}
-            total={total}
-            limit={limit}
-            onPageChange={setPage}
-          />
-        )}
-
         {/* Transactions Table */}
         {transactionsLoading ? (
           <TableSkeleton rows={10} columns={7} />
@@ -316,6 +305,17 @@ function TransactionsPage() {
                     icon: Upload,
                   }
             }
+          />
+        )}
+
+        {/* Pagination - directly below the journal */}
+        {!transactionsLoading && transactions.length > 0 && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            limit={limit}
+            onPageChange={setPage}
           />
         )}
       </div>
