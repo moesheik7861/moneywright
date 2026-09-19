@@ -99,14 +99,14 @@ function TransactionsPage() {
     categoryBreakdown: [],
   }
 
-  const currency = stats?.currency || 'ZAR'
+  const currency = 'ZAR'
 
   // Format amount with proper currency
   const formatAmount = (amount: number, curr: string) => {
-    const locale = curr === 'ZAR' ? 'en-ZA' : curr === 'INR' ? 'en-IN' : 'en-US'
+    const locale = 'en-ZA'
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: curr,
+      currency: 'ZAR',
       maximumFractionDigits: 2,
     }).format(amount)
   }
