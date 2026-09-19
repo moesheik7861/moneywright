@@ -121,7 +121,7 @@ export function TransactionTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="w-full min-w-[1450px] text-xs">
+        <Table className="w-full table-fixed text-xs">
           <TableHeader>
             <TableRow className="h-9 bg-surface-elevated hover:bg-surface-elevated border-b border-border-subtle">
               <TableHead className="w-24">Date</TableHead>
