@@ -121,23 +121,23 @@ export function TransactionTable({
       </div>
 
       <div className="overflow-x-auto">
-        <Table className="min-w-[1900px]">
+        <Table className="w-full min-w-[1450px] text-xs">
           <TableHeader>
-            <TableRow className="bg-surface-elevated hover:bg-surface-elevated border-b border-border-subtle">
-              <TableHead className="w-28">Date</TableHead>
-              <TableHead className="w-28">Type</TableHead>
-              <TableHead className="w-48">Category</TableHead>
-              <TableHead className="w-48">Account</TableHead>
-              <TableHead className="w-32 text-right">Amount</TableHead>
-              <TableHead className="min-w-[360px]">Description</TableHead>
-              <TableHead className="w-24">Tax?</TableHead>
-              <TableHead className="w-24">Month</TableHead>
-              <TableHead className="w-20">Year</TableHead>
-              <TableHead className="w-28">Recurring?</TableHead>
-              <TableHead className="w-28">Source</TableHead>
-              <TableHead className="w-28 text-right">Units (kWh)</TableHead>
-              <TableHead className="w-28 text-right">VAT (R)</TableHead>
-              <TableHead className="w-36 text-right">Other charges (R)</TableHead>
+            <TableRow className="h-9 bg-surface-elevated hover:bg-surface-elevated border-b border-border-subtle">
+              <TableHead className="w-24">Date</TableHead>
+              <TableHead className="w-24">Type</TableHead>
+              <TableHead className="w-36">Category</TableHead>
+              <TableHead className="w-36">Account</TableHead>
+              <TableHead className="w-28 text-right">Amount</TableHead>
+              <TableHead className="min-w-[240px]">Description</TableHead>
+              <TableHead className="w-16">Tax?</TableHead>
+              <TableHead className="w-20">Month</TableHead>
+              <TableHead className="w-16">Year</TableHead>
+              <TableHead className="w-20">Recurring?</TableHead>
+              <TableHead className="w-20">Source</TableHead>
+              <TableHead className="w-20 text-right">Units (kWh)</TableHead>
+              <TableHead className="w-20 text-right">VAT (R)</TableHead>
+              <TableHead className="w-28 text-right">Other charges (R)</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -162,7 +162,7 @@ export function TransactionTable({
                   className="group border-b border-border-subtle last:border-b-0 hover:bg-surface-hover transition-colors"
                   style={{ animationDelay: `${Math.min(index * 15, 180)}ms` }}
                 >
-                  <TableCell className="whitespace-nowrap py-3 text-sm text-foreground">
+                  <TableCell className="whitespace-nowrap py-2 text-xs/g text-foreground">
                     {date.toLocaleDateString('en-ZA', {
                       year: 'numeric',
                       month: '2-digit',
@@ -170,7 +170,7 @@ export function TransactionTable({
                     })}
                   </TableCell>
 
-                  <TableCell className="py-3">
+                  <TableCell className="py-2/g">
                     <span className={cn(
                       'inline-flex rounded-md border px-2 py-1 text-xs font-medium',
                       txn.type === 'credit'
@@ -181,7 +181,7 @@ export function TransactionTable({
                     </span>
                   </TableCell>
 
-                  <TableCell className="py-3">
+                  <TableCell className="py-2/g">
                     <span
                       className={cn(
                         'inline-flex max-w-[190px] items-center rounded-md border px-2 py-1 text-xs font-medium',
@@ -197,7 +197,7 @@ export function TransactionTable({
                     </span>
                   </TableCell>
 
-                  <TableCell className="py-3">
+                  <TableCell className="py-2/g">
                     <AccountLogo
                       logoPath={logoPath}
                       institutionId={institutionId || 'bank'}
@@ -211,7 +211,7 @@ export function TransactionTable({
                     />
                   </TableCell>
 
-                  <TableCell className="py-3 text-right whitespace-nowrap">
+                  <TableCell className="py-2/g text-right whitespace-nowrap">
                     <span className={cn(
                       'font-semibold tabular-nums text-sm',
                       txn.type === 'credit' ? 'text-positive' : 'text-foreground'
@@ -220,9 +220,9 @@ export function TransactionTable({
                     </span>
                   </TableCell>
 
-                  <TableCell className="py-3">
+                  <TableCell className="py-2/g">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground text-sm" title={txn.summary || txn.originalDescription}>
+                      <p className="truncate font-medium text-foreground text-xs" title={txn.summary || txn.originalDescription}>
                         {txn.summary || txn.originalDescription}
                       </p>
                       {txn.summary && txn.summary !== txn.originalDescription && (
@@ -233,18 +233,18 @@ export function TransactionTable({
                     </div>
                   </TableCell>
 
-                  <TableCell className="py-3 text-xs text-muted-foreground">No</TableCell>
-                  <TableCell className="py-3 text-xs text-muted-foreground">{month}</TableCell>
-                  <TableCell className="py-3 text-xs text-muted-foreground">{year}</TableCell>
-                  <TableCell className="py-3 text-xs text-muted-foreground">
+                  <TableCell className="py-2/g text-xs text-muted-foreground">No</TableCell>
+                  <TableCell className="py-2/g text-xs text-muted-foreground">{month}</TableCell>
+                  <TableCell className="py-2/g text-xs text-muted-foreground">{year}</TableCell>
+                  <TableCell className="py-2/g text-xs text-muted-foreground">
                     {txn.isSubscription ? 'Yes' : 'No'}
                   </TableCell>
-                  <TableCell className="py-3 text-xs text-muted-foreground">Statement</TableCell>
-                  <TableCell className="py-3 text-right text-xs text-muted-foreground">—</TableCell>
-                  <TableCell className="py-3 text-right text-xs text-muted-foreground">—</TableCell>
-                  <TableCell className="py-3 text-right text-xs text-muted-foreground">—</TableCell>
+                  <TableCell className="py-2/g text-xs text-muted-foreground">Statement</TableCell>
+                  <TableCell className="py-2/g text-right text-xs text-muted-foreground">—</TableCell>
+                  <TableCell className="py-2/g text-right text-xs text-muted-foreground">—</TableCell>
+                  <TableCell className="py-2/g text-right text-xs text-muted-foreground">—</TableCell>
 
-                  <TableCell className="py-3">
+                  <TableCell className="py-2/g">
                     <Button
                       variant="ghost"
                       size="icon"
