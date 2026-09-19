@@ -16,7 +16,7 @@ export function AppLayout({ children, title, description, hideHeader }: AppLayou
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="bg-background">
+      <SidebarInset className="min-w-0 bg-background">
         {showHeader && (
           <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle bg-background/95 backdrop-blur-sm px-4">
             <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
@@ -27,7 +27,7 @@ export function AppLayout({ children, title, description, hideHeader }: AppLayou
             </div>
           </header>
         )}
-        <main className="flex-1 overflow-auto p-6 lg:p-8">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )
